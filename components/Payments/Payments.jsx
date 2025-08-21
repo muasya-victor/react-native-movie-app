@@ -48,8 +48,8 @@ export default function PaymentsComponent() {
       
       {/* Header */}
       <View className="px-4 pt-12 pb-4 flex-row items-center justify-between">
-        <TouchableOpacity className="p-2">
-          <Text className="text-xl text-app-text-primary">☰</Text>
+        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <Text className="text-2xl">←</Text>
         </TouchableOpacity>
         <Text className="text-xl font-semibold text-app-text-primary">
           MyPay

@@ -52,6 +52,11 @@ export default function TabsLayout() {
           title: "Workers",
           icon: "people-outline"
         },
+        {
+          name: "payments",
+          title: "Payments",
+          icon: "cash-outline"
+        },
         ...profile,
 
       ];
