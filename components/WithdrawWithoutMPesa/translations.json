@@ -1,0 +1,22 @@
+{
+  "en": {
+    "withdraw": "Withdraw",
+    "siteManager": "Site Manager",
+    "amount": "Amount",
+    "enterAmount": "Enter amount",
+    "requestWithdrawal": "Request Withdrawal",
+    "withdrawalRequested": "Withdrawal request submitted",
+    "processing": "Processing your request...",
+    "managerWillContact": "Your site manager will contact you soon"
+  },
+  "sw": {
+    "withdraw": "Toa",
+    "siteManager": "Meneja wa Tovuti",
+    "amount": "Kiasi",
+    "enterAmount": "Ingiza kiasi",
+    "requestWithdrawal": "Omba Kutolewa",
+    "withdrawalRequested": "Ombi la kutolewa limewasilishwa",
+    "processing": "Inachakata ombi lako...",
+    "managerWillContact": "Meneja wako wa tovuti atawasiliana nawe hivi karibuni"
+  }
+}

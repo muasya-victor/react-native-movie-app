@@ -1,0 +1,40 @@
+{
+  "en": {
+    "title": "Add Worker",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "phoneNumber": "Phone Number",
+    "workerIdOptional": "Worker ID (Optional)",
+    "enterFirstName": "Enter first name",
+    "enterLastName": "Enter last name",
+    "enterPhoneNumber": "Enter phone number",
+    "enterWorkerId": "Enter worker ID",
+    "addWorker": "Add Worker",
+    "cancel": "Cancel",
+    "workerAdded": "Worker added successfully",
+    "error": "Error adding worker",
+    "pleaseEnterFirstName": "Please enter first name",
+    "pleaseEnterLastName": "Please enter last name",
+    "pleaseEnterPhoneNumber": "Please enter phone number",
+    "invalidPhoneNumber": "Please enter a valid phone number"
+  },
+  "sw": {
+    "title": "Ongeza Mfanyakazi",
+    "firstName": "Jina la Kwanza",
+    "lastName": "Jina la Mwisho",
+    "phoneNumber": "Nambari ya Simu",
+    "workerIdOptional": "Kitambulisho cha Mfanyakazi (Si Lazima)",
+    "enterFirstName": "Ingiza jina la kwanza",
+    "enterLastName": "Ingiza jina la mwisho",
+    "enterPhoneNumber": "Ingiza nambari ya simu",
+    "enterWorkerId": "Ingiza kitambulisho cha mfanyakazi",
+    "addWorker": "Ongeza Mfanyakazi",
+    "cancel": "Ghairi",
+    "workerAdded": "Mfanyakazi ameongezwa kikamilifu",
+    "error": "Hitilafu ya kuongeza mfanyakazi",
+    "pleaseEnterFirstName": "Tafadhali ingiza jina la kwanza",
+    "pleaseEnterLastName": "Tafadhali ingiza jina la mwisho",
+    "pleaseEnterPhoneNumber": "Tafadhali ingiza nambari ya simu",
+    "invalidPhoneNumber": "Tafadhali ingiza nambari sahihi ya simu"
+  }
+}

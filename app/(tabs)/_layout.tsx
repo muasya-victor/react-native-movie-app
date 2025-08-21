@@ -1,120 +1,123 @@
-import { icons } from "@/constants/icons";
-import { images } from "@/constants/images";
+// app/(tabs)/_layout.tsx - Fixed duplicate screen names
+import { useAuth } from "@/contexts/AuthContext";
+import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import React from "react";
-import { Image, ImageBackground, Text, View } from "react-native";
 
-const TabIcon = ({
-  icon,
-  title,
-  focused,
-}: {
-  icon: any;
+// Define tab configuration interface
+interface TabConfig {
+  name: string;
   title: string;
-  focused: boolean;
-}) => {
-  return (
-    <>
-      {focused ? (
-        <ImageBackground
-          source={images.highlight}
-          className="flex flex-row items-center justify-center overflow-hidden bg-pink-400 mt-[22px] min-h-16 rounded-full w-full min-w-[112px]"
-        >
-          <Image tintColor="#151312" className="size-5" source={icon}></Image>
-          <Text className="text-secondary text-base font-semibold ml-2">
-            {title}
-          </Text>
-        </ImageBackground>
-      ) : (
-        <View className="size-full justify-center items-center mt-4 rounded-full">
-          <Image source={icon} tintColor="#A8B5DB"></Image>
-        </View>
-      )}
-    </>
-  );
-};
-const _layout = () => {
+  icon: keyof typeof Ionicons.glyphMap;
+}
+
+export default function TabsLayout() {
+  const { user, userType } = useAuth();
+
+  console.log('Current userType:', userType);
+
+  // Define different tab configurations
+  const getTabsForUser = (): TabConfig[] => {
+    const baseTabs: TabConfig[] = [
+      {
+        name: "index",
+        title: "Home",
+        icon: "home-outline"
+      },
+    ];
+    const profile: TabConfig[] = [
+      {
+        name: "profile",
+        title: "Profile",
+        icon: "person-outline"
+      }
+    ];
+
+    if (userType === 'SystemAdmin') {
+      return [
+        ...baseTabs,
+        {
+          name: "workers",
+          title: "Workers",
+          icon: "people-outline"
+        },
+        ...profile
+      ];
+    }
+
+    if (userType === 'SiteManager') {
+      return [
+        ...baseTabs,
+        {
+          name: "workers",
+          title: "Workers",
+          icon: "people-outline"
+        },
+        ...profile,
+
+      ];
+    }
+
+    // WageWorker tabs (default)
+    return [
+      ...baseTabs,
+      {
+        name: "transactions", 
+        title: "Transactions",
+        icon: "cash-outline"
+      },
+      ...profile,
+
+    ];
+  };
+
+  // Get all possible tab names to determine which ones to hide
+  const visibleTabs = getTabsForUser().map(tab => tab.name);
+  const allPossibleTabs = ["workers",  "transactions"];
+  
   return (
     <Tabs
       screenOptions={{
-        tabBarShowLabel: false,
-        tabBarItemStyle: {
-          width: "100%",
-          height: "100%",
-          justifyContent: "center",
-          alignItems: "center",
-        },
+        headerShown: false,
+        tabBarActiveTintColor: "#4CAF50",
         tabBarStyle: {
-          backgroundColor: "#0f0D23",
-          borderRadius: 50,
-          height: 52,
-          marginHorizontal: 10,
-          marginBottom: 36,
-          position: "absolute",
-          overflow: "hidden",
-          borderWidth: 1,
-          borderColor: "#0f0D23",
+          paddingTop: 10,    
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,      
         },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon icon={icons.home} title="Home" focused={focused}></TabIcon>
-          ),
-        }}
-      />{" "}
-      <Tabs.Screen
-        name="search"
-        options={{
-          title: "Search",
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <>
-              <TabIcon
-                icon={icons.search}
-                title="Search"
-                focused={focused}
-              ></TabIcon>
-            </>
-          ),
-        }}
-      />{" "}
-      <Tabs.Screen
-        name="saved"
-        options={{
-          title: "Saved",
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <>
-              <TabIcon
-                icon={icons.save}
-                title="Saved"
-                focused={focused}
-              ></TabIcon>
-            </>
-          ),
-        }}
-      />{" "}
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon
-              icon={icons.person}
-              title="Profile"
-              focused={focused}
-            ></TabIcon>
-          ),
-        }}
-      />
+      {/* Render visible tabs */}
+      {getTabsForUser().map((tab) => (
+        <Tabs.Screen
+          key={tab.name}
+          name={tab.name}
+          options={{
+            title: tab.title,
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name={tab.icon} size={size} color={color} />
+            ),
+          }}
+        />
+      ))}
+      
+      {/* Hidden routes that are always hidden */}
+      <Tabs.Screen name="withdraw-mpesa" options={{ href: null }} />
+      <Tabs.Screen name="withdraw-without-mpesa" options={{ href: null }} />
+      <Tabs.Screen name="add-worker" options={{ href: null }} />
+      <Tabs.Screen name="worker/[id]" options={{ href: null }} />
+      
+      {/* Hide tabs that aren't visible for current user */}
+      {allPossibleTabs
+        .filter(tabName => !visibleTabs.includes(tabName))
+        .map(tabName => (
+          <Tabs.Screen 
+            key={`hidden-${tabName}`}
+            name={tabName} 
+            options={{ href: null }} 
+          />
+        ))
+      }
     </Tabs>
   );
-};
-
-export default _layout;
+}

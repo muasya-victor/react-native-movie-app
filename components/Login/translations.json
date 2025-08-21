@@ -1,0 +1,26 @@
+{
+  "en": {
+    "appTitle": "MyPay",
+    "enterPhoneNumber": "Enter your phone number",
+    "phoneNumberPlaceholder": "Phone number",
+    "login": "Login",
+    "termsText": "By continuing, you agree to our",
+    "termsOfService": "Terms of Service",
+    "and": "and",
+    "privacyPolicy": "Privacy Policy",
+    "languageSwitch": "SW",
+    "currentLanguage": "EN"
+  },
+  "sw": {
+    "appTitle": "MyPay",
+    "enterPhoneNumber": "Ingiza nambari yako ya simu",
+    "phoneNumberPlaceholder": "Nambari ya simu",
+    "login": "Ingia",
+    "termsText": "Kwa kuendelea, unakubali",
+    "termsOfService": "Masharti ya Huduma",
+    "and": "na",
+    "privacyPolicy": "Sera ya Faragha",
+    "languageSwitch": "EN",
+    "currentLanguage": "SW"
+  }
+}

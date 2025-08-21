@@ -1,0 +1,28 @@
+{
+  "en": {
+    "title": "Transactions",
+    "noTransactions": "No transactions found",
+    "loan": "Loan",
+    "withdrawal": "Withdrawal",
+    "foodDeduction": "Food Deduction",
+    "loanDeduction": "Loan Deduction",
+    "transaction": "Transaction",
+    "completed": "Completed",
+    "pending": "Pending",
+    "failed": "Failed",
+    "processing": "Processing"
+  },
+  "sw": {
+    "title": "Miamala",
+    "noTransactions": "Hakuna miamala iliyopatikana",
+    "loan": "Mkopo",
+    "withdrawal": "Uondoaji",
+    "foodDeduction": "Kuondolewa kwa Chakula",
+    "loanDeduction": "Kuondolewa kwa Mkopo",
+    "transaction": "Muamala",
+    "completed": "Imekamilika",
+    "pending": "Inasubiri",
+    "failed": "Imeshindwa",
+    "processing": "Inachakatwa"
+  }
+}

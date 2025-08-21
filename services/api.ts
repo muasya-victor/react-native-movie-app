@@ -10,18 +10,19 @@ interface QueryProp {
   query: string;
 }
 export const fetchMovies = async ({ query }: QueryProp) => {
-  const endpoint = query
-    ? `${TMDB_CONFIG.BASE_URL}/search/movie?query=${encodeURIComponent(query)}`
-    : `${TMDB_CONFIG.BASE_URL}/discover/movie?sort_by=popularity.desc`;
-  const response = await fetch(endpoint, {
-    method: "GET",
-    headers: TMDB_CONFIG.headers,
-  });
-  if (!response.ok) {
-    console.log("response", response);
-    //@ts-ignore
-    throw new Error("Failed to fetch movie", response.statusText);
-  }
-  const data = await response.json();
-  return data.results;
+  // const endpoint = query
+  //   ? `${TMDB_CONFIG.BASE_URL}/search/movie?query=${encodeURIComponent(query)}`
+  //   : `${TMDB_CONFIG.BASE_URL}/discover/movie?sort_by=popularity.desc`;
+  // const response = await fetch(endpoint, {
+  //   method: "GET",
+  //   headers: TMDB_CONFIG.headers,
+  // });
+  // if (!response.ok) {
+  //   console.log("response", response);
+  //   //@ts-ignore
+  //   throw new Error("Failed to fetch movie", response.statusText);
+  // }
+  // const data = await response.json();
+  // return data.results;
+  return
 };

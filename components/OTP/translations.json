@@ -1,0 +1,26 @@
+{
+  "en": {
+    "verification": "Verification",
+    "enterTheCode": "Enter the code",
+    "verificationSent": "We sent a verification code to +1 555-123-4567",
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "seconds": "Seconds",
+    "verify": "Verify",
+    "didntReceiveCode": "Didn't receive the code?",
+    "resend": "Resend",
+    "didntReceiveResend": "Didn't receive the code? Resend"
+  },
+  "sw": {
+    "verification": "Uthibitishaji",
+    "enterTheCode": "Ingiza nambari",
+    "verificationSent": "Tumetuma nambari ya kuthibitisha kwa +1 555-123-4567",
+    "hours": "Masaa",
+    "minutes": "Dakika",
+    "seconds": "Sekunde",
+    "verify": "Thibitisha",
+    "didntReceiveCode": "Hujapokea nambari?",
+    "resend": "Tuma Tena",
+    "didntReceiveResend": "Hujapokea nambari? Tuma Tena"
+  }
+}

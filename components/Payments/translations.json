@@ -1,0 +1,20 @@
+{
+  "en": {
+    "reports": "Reports",
+    "workers": "Workers",
+    "dailyWagesOwed": "Daily Wages Owed",
+    "amountToRemit": "Amount to remit to MyPay",
+    "disbursePayments": "Disburse Payments",
+    "pay": "Pay",
+    "vendors": "vendors"
+  },
+  "sw": {
+    "reports": "Ripoti",
+    "workers": "Wafanyakazi",
+    "dailyWagesOwed": "Mishahara ya Kila Siku Inayodaiwa",
+    "amountToRemit": "Kiasi cha kutuma kwa MyPay",
+    "disbursePayments": "Sambaza Malipo",
+    "pay": "Lipa",
+    "vendors": "wachuuzi"
+  }
+}

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "movie",
-    "slug": "movie",
+    "name": "mypay",
+    "slug": "mypay",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
-    "scheme": "movie",
+    "scheme": "mypay",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

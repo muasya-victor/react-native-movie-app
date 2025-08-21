@@ -1,0 +1,42 @@
+{
+  "en": {
+    "disbursePayments": "Disburse Payments",
+    "totalOwed": "Total Owed",
+    "selectAll": "Select All",
+    "selected": "Selected",
+    "workers": "workers",
+    "pay": "Pay",
+    "paySelected": "Pay Selected",
+    "payAll": "Pay All",
+    "confirmPayment": "Confirm Payment",
+    "confirmPaymentMessage": "Pay {name} KSh {amount}?",
+    "confirmBulkPayment": "Confirm Bulk Payment",
+    "confirmBulkPaymentMessage": "Pay {count} workers totaling KSh {amount}?",
+    "cancel": "Cancel",
+    "success": "Success",
+    "error": "Error",
+    "paymentSent": "Payment sent to {name}",
+    "bulkPaymentSent": "Payments sent to {count} workers",
+    "noWorkersSelected": "Please select at least one worker"
+  },
+  "sw": {
+    "disbursePayments": "Sambaza Malipo",
+    "totalOwed": "Jumla Inayodaiwa",
+    "selectAll": "Chagua Wote",
+    "selected": "Umechagua",
+    "workers": "wafanyakazi",
+    "pay": "Lipa",
+    "paySelected": "Lipa Uliochagua",
+    "payAll": "Lipa Wote",
+    "confirmPayment": "Thibitisha Malipo",
+    "confirmPaymentMessage": "Lipa {name} KSh {amount}?",
+    "confirmBulkPayment": "Thibitisha Malipo ya Pamoja",
+    "confirmBulkPaymentMessage": "Lipa wafanyakazi {count} jumla ya KSh {amount}?",
+    "cancel": "Ghairi",
+    "success": "Imefanikiwa",
+    "error": "Hitilafu",
+    "paymentSent": "Malipo yametumwa kwa {name}",
+    "bulkPaymentSent": "Malipo yametumwa kwa wafanyakazi {count}",
+    "noWorkersSelected": "Tafadhali chagua mfanyakazi mmoja au zaidi"
+  }
+}

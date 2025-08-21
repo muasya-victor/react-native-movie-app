@@ -1,0 +1,36 @@
+{
+  "en": {
+    "title": "Workers",
+    "allWorkers": "All Workers",
+    "active": "Active",
+    "inactive": "Inactive",
+    "addWorker": "Add Worker",
+    "loading": "Loading...",
+    "error": "Error occurred",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit"
+  },
+  "sw": {
+    "title": "Wafanyakazi",
+    "allWorkers": "Wafanyakazi Wote",
+    "active": "Hai",
+    "inactive": "Haikai",
+    "addWorker": "Ongeza Mfanyakazi",
+    "loading": "Inapakia...",
+    "error": "Hitilafu imetokea",
+    "retry": "Jaribu tena",
+    "cancel": "Ghairi",
+    "confirm": "Thibitisha",
+    "back": "Nyuma",
+    "next": "Mbele",
+    "save": "Hifadhi",
+    "delete": "Futa",
+    "edit": "Hariri"
+  }
+}

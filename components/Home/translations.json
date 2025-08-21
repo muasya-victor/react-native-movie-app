@@ -1,0 +1,26 @@
+{
+  "en": {
+    "appTitle": "MyPay",
+    "withdrawableBalance": "Withdrawable Balance",
+    "withdrawCash": "Withdraw Cash",
+    "accruedWages": "Accrued Wages",
+    "foodDeductions": "Food Deductions",
+    "withdraw": "Withdraw",
+    "withMPesa": "With MPesa",
+    "withMPesaDescription": "Withdraw to your MPesa account",
+    "withoutMPesa": "Without MPesa",
+    "withoutMPesaDescription": "Request withdrawal to your site manager"
+  },
+  "sw": {
+    "appTitle": "MyPay",
+    "withdrawableBalance": "Salio Linaloweza Kutolewa",
+    "withdrawCash": "Toa Pesa",
+    "accruedWages": "Mishahara Iliyokusanyika",
+    "foodDeductions": "Kuondolewa kwa Chakula",
+    "withdraw": "Toa",
+    "withMPesa": "Kwa MPesa",
+    "withMPesaDescription": "Toa kwenda kwenye akaunti yako ya MPesa",
+    "withoutMPesa": "Bila MPesa",
+    "withoutMPesaDescription": "Omba kutolewa kwa meneja wako wa tovuti"
+  }
+}

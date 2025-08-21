@@ -1,0 +1,40 @@
+{
+  "en": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "success": "Success",
+    "error": "Error",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "retry": "Retry",
+    "close": "Close",
+    "submit": "Submit",
+    "search": "Search",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK"
+  },
+  "sw": {
+    "save": "Hifadhi",
+    "cancel": "Ghairi",
+    "success": "Mafanikio",
+    "error": "Hitilafu",
+    "edit": "Hariri",
+    "back": "Rudi",
+    "next": "Ifuatayo",
+    "confirm": "Thibitisha",
+    "delete": "Futa",
+    "loading": "Inapakia...",
+    "retry": "Jaribu Tena",
+    "close": "Funga",
+    "submit": "Wasilisha",
+    "search": "Tafuta",
+    "yes": "Ndiyo",
+    "no": "Hapana",
+    "ok": "Sawa"
+  }
+}

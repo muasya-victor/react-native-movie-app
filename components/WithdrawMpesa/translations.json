@@ -1,0 +1,20 @@
+{
+  "en": {
+    "withdraw": "Withdraw",
+    "mpesaNumber": "MPesa Number",
+    "amount": "Amount",
+    "enterAmount": "Enter amount",
+    "confirm": "Confirm",
+    "withdrawalSuccessful": "Withdrawal successful",
+    "processing": "Processing your withdrawal..."
+  },
+  "sw": {
+    "withdraw": "Toa",
+    "mpesaNumber": "Nambari ya MPesa",
+    "amount": "Kiasi",
+    "enterAmount": "Ingiza kiasi",
+    "confirm": "Thibitisha",
+    "withdrawalSuccessful": "Kutolewa kumefanikiwa",
+    "processing": "Inachakata kutolewa kwako..."
+  }
+}
