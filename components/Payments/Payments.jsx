@@ -1,3 +1,5 @@
+import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -7,8 +9,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useAuth } from '@/contexts/AuthContext';
-import { useTranslation } from '@/hooks/useTranslation';
 import translations from './translations.json';
 
 export default function PaymentsComponent() {
@@ -88,7 +88,7 @@ export default function PaymentsComponent() {
           <View className="bg-app-surface rounded-lg p-6 mb-4">
             <View className="flex-row items-center mb-6">
               <View className="w-12 h-12 bg-app-surface-variant rounded-lg justify-center items-center mr-4">
-                <Text className="text-2xl text-app-text-primary">$</Text>
+                <Text className="text-2xl text-app-text-primary">KES</Text>
               </View>
               <View className="flex-1">
                 <Text className="text-2xl font-bold text-app-text-primary">
@@ -101,7 +101,7 @@ export default function PaymentsComponent() {
             </View>
             
             <TouchableOpacity 
-              className="bg-app-primary rounded-lg py-4"
+              className="bg-app-primary rounded-full py-4"
               onPress={handleDisbursePayments}
             >
               <Text className="text-white text-center font-semibold text-base">
@@ -133,7 +133,7 @@ export default function PaymentsComponent() {
             </View>
             
             <TouchableOpacity 
-              className="bg-app-primary rounded-lg py-4"
+              className="bg-app-primary rounded-full py-4"
               onPress={handlePayMyPay}
             >
               <Text className="text-white text-center font-semibold text-base">
