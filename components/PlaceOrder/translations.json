@@ -1,0 +1,38 @@
+{
+  "en": {
+    "title": "Place Order",
+    "active": "Active",
+    "items": "items",
+    "completeOrder": "Complete Order",
+    "addToOrder": "Add to Order",
+    "quantity": "Quantity",
+    "total": "Total",
+    "loading": "Loading...",
+    "error": "Error occurred",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "save": "Save",
+    "delete": "Delete"
+  },
+  "sw": {
+    "title": "Weka Agizo",
+    "active": "Hai",
+    "items": "vitu",
+    "completeOrder": "Maliza Agizo",
+    "addToOrder": "Ongeza kwenye Agizo",
+    "quantity": "Idadi",
+    "total": "Jumla",
+    "loading": "Inapakia...",
+    "error": "Hitilafu imetokea",
+    "retry": "Jaribu Tena",
+    "cancel": "Ghairi",
+    "confirm": "Thibitisha",
+    "back": "Rudi",
+    "next": "Ifuatayo",
+    "save": "Hifadhi",
+    "delete": "Futa"
+  }
+}

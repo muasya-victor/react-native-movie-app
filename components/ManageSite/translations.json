@@ -1,0 +1,34 @@
+{
+  "en": {
+    "title": "Manage Site",
+    "search": "Search",
+    "placeOrder": "Place Order",
+    "active": "Active",
+    "inactive": "Inactive",
+    "loading": "Loading...",
+    "error": "Error occurred",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "save": "Save",
+    "delete": "Delete"
+  },
+  "sw": {
+    "title": "Simamia Eneo",
+    "search": "Tafuta",
+    "placeOrder": "Weka Agizo",
+    "active": "Hai",
+    "inactive": "Sio Hai",
+    "loading": "Inapakia...",
+    "error": "Hitilafu imetokea",
+    "retry": "Jaribu Tena",
+    "cancel": "Ghairi",
+    "confirm": "Thibitisha",
+    "back": "Rudi",
+    "next": "Ifuatayo",
+    "save": "Hifadhi",
+    "delete": "Futa"
+  }
+}

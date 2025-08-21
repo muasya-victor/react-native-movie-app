@@ -1,0 +1,34 @@
+{
+  "en": {
+    "title": "Sites",
+    "addSite": "Add Site",
+    "constructionSites": "Construction Sites",
+    "edit": "Edit",
+    "manage": "Manage",
+    "loading": "Loading...",
+    "error": "Error occurred",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "save": "Save",
+    "delete": "Delete"
+  },
+  "sw": {
+    "title": "Maeneo ya Ujenzi",
+    "addSite": "Ongeza Eneo",
+    "constructionSites": "Maeneo ya Ujenzi",
+    "edit": "Hariri",
+    "manage": "Simamia",
+    "loading": "Inapakia...",
+    "error": "Hitilafu imetokea",
+    "retry": "Jaribu Tena",
+    "cancel": "Ghairi",
+    "confirm": "Thibitisha",
+    "back": "Rudi",
+    "next": "Ifuatayo",
+    "save": "Hifadhi",
+    "delete": "Futa"
+  }
+}
