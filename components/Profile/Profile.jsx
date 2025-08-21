@@ -1,18 +1,18 @@
+import UserTypeSwitcher from '@/components/UserTypeSwitcher';
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    Alert,
-    Modal,
-    ScrollView,
-    StatusBar,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  ScrollView,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useTranslation } from '../../hooks/useTranslation';
 import translations from './translations.json'; // Import local translations
-import UserTypeSwitcher from '@/components/UserTypeSwitcher';
 
 export default function ProfileComponent() {
   const router = useRouter();
@@ -97,6 +97,10 @@ export default function ProfileComponent() {
               {t('workerId')}: W12345
             </Text>
           </View>
+        </View>
+
+        <View>
+          <UserTypeSwitcher/>
         </View>
 
 

@@ -47,14 +47,19 @@ export default function TabsLayout() {
     if (userType === 'SiteManager') {
       return [
         ...baseTabs,
-        {
-          name: "workers",
-          title: "Workers",
-          icon: "people-outline"
-        },
+        // {
+        //   name: "workers",
+        //   title: "Workers",
+        //   icon: "people-outline"
+        // },
         {
           name: "payments",
           title: "Payments",
+          icon: "cash-outline"
+        },
+        {
+          name: "withdrawal-requests",
+          title: "Requests",
           icon: "cash-outline"
         },
         ...profile,

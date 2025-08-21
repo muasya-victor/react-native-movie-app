@@ -1,0 +1,40 @@
+{
+  "en": {
+    "withdrawalRequests": "Withdrawal Requests",
+    "pending": "Pending",
+    "processed": "Processed",
+    "approve": "Mark As Paid",
+    "decline": "Decline",
+    "approved": "Approved",
+    "declined": "Declined",
+    "approveRequest": "Approve Request",
+    "approveRequestMessage": "Approve withdrawal of KES {amount} for {name}?",
+    "declineRequest": "Decline Request",
+    "declineRequestMessage": "Decline withdrawal request for {name}?",
+    "cancel": "Cancel",
+    "success": "Success",
+    "requestApproved": "Withdrawal request approved for {name}",
+    "requestDeclined": "Withdrawal request declined for {name}",
+    "noRequests": "No withdrawal requests",
+    "noRequestsDescription": "When workers submit withdrawal requests, they will appear here for approval."
+  },
+  "sw": {
+    "withdrawalRequests": "Maombi ya Uondoaji",
+    "pending": "Inasubiri",
+    "processed": "Imeshafikishwa",
+    "approve": "Thibitisha Malipo",
+    "decline": "Kataa",
+    "approved": "Imeidhinishwa",
+    "declined": "Imekataliwa",
+    "approveRequest": "Idhinisha Ombi",
+    "approveRequestMessage": "Idhinisha uondoaji wa KES {amount} kwa {name}?",
+    "declineRequest": "Kataa Ombi",
+    "declineRequestMessage": "Kataa ombi la uondoaji kwa {name}?",
+    "cancel": "Ghairi",
+    "success": "Imefanikiwa",
+    "requestApproved": "Ombi la uondoaji limeidhinishwa kwa {name}",
+    "requestDeclined": "Ombi la uondoaji limekataliwa kwa {name}",
+    "noRequests": "Hakuna maombi ya uondoaji",
+    "noRequestsDescription": "Wakati wafanyakazi watakapowasilisha maombi ya uondoaji, yataonekana hapa kwa idhini."
+  }
+}

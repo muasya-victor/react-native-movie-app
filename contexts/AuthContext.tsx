@@ -41,7 +41,7 @@ interface AuthProviderProps {
 // Auth Provider Component
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [userType, setUserType] = useState<UserType>('WageWorker'); // Default to WageWorker
+  const [userType, setUserType] = useState<UserType>('SiteManager'); // Default to SystemManager,WageWorker
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Initialize auth state on app start
