@@ -8,6 +8,18 @@ const api = axios.create({
   timeout: 10000,
 });
 
+api.interceptors.request.use(
+  async (config) => {
+    // const token = await SecureStore.getItemAsync("token"); // <-- retrieve saved token
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU2MDc0MzYwLCJpYXQiOjE3NTYwNTk5NjAsImp0aSI6IjZkZmI2OTI0ZjkyYTQ1ZDA5MTA2MDUwYjY3N2I2ODU0IiwidXNlcl9pZCI6MX0.tN9HJVkTgZBSgizALO4RuwV6zIvTazCxSWwYmBboiGc"
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Universal API function
 export async function apiRequest(method, endpoint, data = null, headers = {}) {
   try {
