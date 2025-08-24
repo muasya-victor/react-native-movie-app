@@ -1,0 +1,34 @@
+{
+  "en": {
+    "title": "Menu",
+    "addItem": "Add Item",
+    "searchMenu": "Search menu items...",
+    "totalItems": "Total Items",
+    "availableItems": "Available Items",
+    "available": "Available",
+    "unavailable": "Unavailable",
+    "noSearchResults": "No items found matching your search",
+    "noMenuItems": "No menu items yet",
+    "addFirstItem": "Add Your First Item",
+    "loading": "Loading...",
+    "error": "Error occurred",
+    "retry": "Retry",
+    "back": "Back"
+  },
+  "sw": {
+    "title": "Menyu",
+    "addItem": "Ongeza Kitu",
+    "searchMenu": "Tafuta vitu vya menyu...",
+    "totalItems": "Vitu Vyote",
+    "availableItems": "Vitu Vinavyopatikana",
+    "available": "Vinapatikana",
+    "unavailable": "Havipatikani",
+    "noSearchResults": "Hakuna vitu vilivyopatikana kulingana na utafutaji wako",
+    "noMenuItems": "Hakuna vitu vya menyu bado",
+    "addFirstItem": "Ongeza Kitu chako cha Kwanza",
+    "loading": "Inapakia...",
+    "error": "Kosa limetokea",
+    "retry": "Jaribu Tena",
+    "back": "Rudi"
+  }
+}

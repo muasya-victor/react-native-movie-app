@@ -1,34 +1,22 @@
 {
   "en": {
-    "title": "Sites",
-    "addSite": "Add Site",
-    "constructionSites": "Construction Sites",
-    "edit": "Edit",
-    "manage": "Manage",
-    "loading": "Loading...",
-    "error": "Error occurred",
-    "retry": "Retry",
-    "cancel": "Cancel",
-    "confirm": "Confirm",
-    "back": "Back",
-    "next": "Next",
-    "save": "Save",
-    "delete": "Delete"
+    "mySites": "My Sites",
+    "selectSiteToManage": "Select a site to manage",
+    "searchSites": "Search sites...",
+    "workers": "workers",
+    "select": "Select",
+    "active": "Active",
+    "inactive": "Inactive",
+    "noSitesFound": "No sites found"
   },
   "sw": {
-    "title": "Maeneo ya Ujenzi",
-    "addSite": "Ongeza Eneo",
-    "constructionSites": "Maeneo ya Ujenzi",
-    "edit": "Hariri",
-    "manage": "Simamia",
-    "loading": "Inapakia...",
-    "error": "Hitilafu imetokea",
-    "retry": "Jaribu Tena",
-    "cancel": "Ghairi",
-    "confirm": "Thibitisha",
-    "back": "Rudi",
-    "next": "Ifuatayo",
-    "save": "Hifadhi",
-    "delete": "Futa"
+    "mySites": "Tovuti Zangu",
+    "selectSiteToManage": "Chagua tovuti ya kusimamia",
+    "searchSites": "Tafuta tovuti...",
+    "workers": "wafanyakazi",
+    "select": "Chagua",
+    "active": "Hai",
+    "inactive": "Haijai",
+    "noSitesFound": "Hakuna tovuti zilizopatikana"
   }
 }

@@ -61,6 +61,21 @@ export default function UserTypeSwitcher() {
             Switch to Site Manager
           </Text>
         </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[
+            styles.button, 
+            userType === 'SystemAdmin' && styles.activeButton
+          ]}
+          onPress={() => handleSwitchUserType('SystemAdmin')}
+        >
+          <Text style={[
+            styles.buttonText,
+            userType === 'SystemAdmin' && styles.activeButtonText
+          ]}>
+            Switch to Site Admin
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <Text style={styles.note}>

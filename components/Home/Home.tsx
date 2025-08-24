@@ -29,7 +29,7 @@ export default function HomeComponent() {
 
   const handleWithdrawPress = () => {
     setShowWithdrawModal(true);
-  };
+  }; 
 
   const handleWithMPesa = () => {
     setShowWithdrawModal(false);
@@ -60,7 +60,7 @@ export default function HomeComponent() {
         {/* Main Balance Card */}
         <View className="w-full overflow-hidden">
           {/* Hero Image with Overlay */}
-          <View className="relative w-full h-72 mb-4 mx-4  overflow-hidden">
+          <View className="relative w-full h-56 mb-4 mx-4  overflow-hidden">
             <Image 
               source={require('../../assets/images/transactions.jpg')}
               className="w-full h-full object-cover"
