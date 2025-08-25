@@ -1,6 +1,6 @@
 {
   "en": {
-    "enterPassword": "Enter Password",
+    "enterPassword": "Enter Pin",
     "enterYourPin": "Enter Your PIN",
     "enterPinFor": "Enter your 6-digit PIN for",
     "pinPlaceholder": "••••••",
@@ -23,7 +23,7 @@
     "userDataFailed": "Failed to get user information. Please try again."
   },
   "sw": {
-    "enterPassword": "Ingiza Nywila",
+    "enterPassword": "Namba Ya Siri",
     "enterYourPin": "Ingiza PIN Yako",
     "enterPinFor": "Ingiza PIN yako ya tarakimu 6 kwa",
     "pinPlaceholder": "••••••",
