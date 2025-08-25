@@ -246,7 +246,7 @@ export default function OTPComponent() {
           </View>
 
           {/* Forgot Password */}
-          <TouchableOpacity 
+          {/* <TouchableOpacity 
             className="mb-8"
             onPress={() => {
               Alert.alert(
@@ -259,7 +259,7 @@ export default function OTPComponent() {
             <Text className="text-center text-app-primary text-sm">
               {t('forgotPassword')}
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* Bottom Section */}
