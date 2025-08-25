@@ -4,14 +4,14 @@ import axios from "axios";
 // Create an axios instance
 const api = axios.create({
   // baseURL: "https://your-api.com/api",
-  baseURL: "https://59088ac56d5d.ngrok-free.app/api",
+  baseURL: "http://192.168.1.203:8000/api",
   timeout: 10000,
 });
 
 api.interceptors.request.use(
   async (config) => {
     // const token = await SecureStore.getItemAsync("token"); // <-- retrieve saved token
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU2MDc2NTgyLCJpYXQiOjE3NTYwNjIxODIsImp0aSI6IjAwNmJiODI1NDIwNDQyZmFiM2FmYzI0NTEwYzI5YjMxIiwidXNlcl9pZCI6MX0.0ftbOoLli3It1fuB_gjhfaMokPcNHg6rDChaHEryg2o"
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU2MTI4NTU5LCJpYXQiOjE3NTYxMTQxNTksImp0aSI6ImY4ZTIzYTY5MjZmYTQ0ODc5OWY3NmFmNWQ5YTk2YmM5IiwidXNlcl9pZCI6MX0.2Ubjx7WtHbOu9wWHsTBkjkYUhMGNfSqHhSJiM9KRyt0"
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
