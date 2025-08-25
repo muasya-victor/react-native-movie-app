@@ -36,7 +36,7 @@ export default function HomeComponent() {
       setLoading(true);
       setError(null);
       console.log('=== FETCHING WALLET DATA ===');
-      const response = await apiRequest('GET', '/wallets/wallets');
+      const response = await apiRequest('GET', '/wallets/');
       console.log('Full Response:', response.data?.results);
       
       if (response.success && response.data?.results?.length > 0) {
