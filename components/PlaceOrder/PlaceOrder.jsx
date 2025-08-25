@@ -1,8 +1,11 @@
+// components/PlaceOrder/PlaceOrder.js
 import { apiRequest } from '@/services/api';
+import { useSiteStore } from '@/store/siteStore';
 import { useWorkersStore } from '@/store/workersStore';
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Animated,
   FlatList,
@@ -25,90 +28,16 @@ const translations = {
   addToOrder: "Add",
   addedToOrder: "Added to order!",
   orderFor: "Order for",
-  completeOrder: "Complete Order"
+  completeOrder: "Complete Order",
+  loading: "Loading...",
+  error: "Error occurred",
+  retry: "Retry"
 };
-
-const mockFoodItems = [
-  {
-    id: '1',
-    name: 'Chapati',
-    price: 20,
-    image: 'https://images.unsplash.com/photo-1586511925558-a4c6376fe65f?w=300&h=200&fit=crop',
-    description: 'Fresh homemade chapati bread',
-    category: 'Bread',
-    rating: 4.8
-  },
-  {
-    id: '2',
-    name: 'Chai',
-    price: 20,
-    image: 'https://images.unsplash.com/photo-1571934811356-5cc061b6821f?w=300&h=200&fit=crop',
-    description: 'Traditional spiced tea with milk',
-    category: 'Beverages',
-    rating: 4.9
-  },
-  {
-    id: '3',
-    name: 'Beans',
-    price: 40,
-    image: 'https://images.unsplash.com/photo-1551326844-4df70f78d0e9?w=300&h=200&fit=crop',
-    description: 'Seasoned cooked beans',
-    category: 'Main Dish',
-    rating: 4.6
-  },
-  {
-    id: '4',
-    name: 'Ugali',
-    price: 15,
-    image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=300&h=200&fit=crop',
-    description: 'Traditional cornmeal staple',
-    category: 'Staple',
-    rating: 4.7
-  },
-  {
-    id: '5',
-    name: 'Rice & Beef',
-    price: 80,
-    image: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=300&h=200&fit=crop',
-    description: 'Steamed rice with tender beef',
-    category: 'Main Dish',
-    rating: 4.9
-  },
-  {
-    id: '6',
-    name: 'Mandazi',
-    price: 10,
-    image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=300&h=200&fit=crop',
-    description: 'Sweet fried dough pastry',
-    category: 'Snacks',
-    rating: 4.5
-  },
-  {
-    id: '7',
-    name: 'Samosa',
-    price: 25,
-    image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=300&h=200&fit=crop',
-    description: 'Crispy fried pastry with savory filling',
-    category: 'Snacks',
-    rating: 4.6
-  },
-  {
-    id: '8',
-    name: 'Githeri',
-    price: 35,
-    image: 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=300&h=200&fit=crop',
-    description: 'Mixed beans and maize',
-    category: 'Main Dish',
-    rating: 4.4
-  }
-];
 
 export default function PlaceOrderComponent() {
   const router = useRouter();
+  const { selectedSite } = useSiteStore();
   const { 
-    workers, 
-    selectedWorker, 
-    setSelectedWorker, 
     updateOrderQuantity, 
     getWorkerOrders, 
     getWorkerOrderTotal, 
@@ -122,8 +51,121 @@ export default function PlaceOrderComponent() {
   const [successAnimation] = useState(new Animated.Value(0));
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedWorker, setSelectedWorker] = useState(null);
+  const [workers, setWorkers] = useState([]);
+  const [loadingWorkers, setLoadingWorkers] = useState(true);
+  const [foodItems, setFoodItems] = useState([]);
+  const [loadingFood, setLoadingFood] = useState(true);
+  const [foodError, setFoodError] = useState(null);
+
+  // Fetch food items from API
+  useEffect(() => {
+    fetchFoodItems();
+  }, []);
+
+  const fetchFoodItems = async () => {
+    try {
+      setLoadingFood(true);
+      setFoodError(null);
+      
+      const response = await apiRequest('GET', '/food/menus/');
+      
+      if (response.success) {
+        // Flatten all dishes from all menus into a single array
+        const dishes = [];
+        response.data.results?.forEach(menu => {
+          menu.dishes?.forEach(dish => {
+            dishes.push({
+              ...dish,
+              menuName: menu.name,
+              menuId: menu.id,
+              // Convert cost to positive number and format as price
+              price: Math.abs(parseInt(dish.cost)) || 0,
+              available: dish.is_available,
+              // Use placeholder image for now
+              image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop',
+              category: menu.name, // Use menu name as category
+              description: `From ${menu.name} menu`,
+            });
+          });
+        });
+        
+        setFoodItems(dishes);
+      } else {
+        setFoodError(response.error?.message || 'Failed to load menu items');
+      }
+    } catch (err) {
+      console.error('Error fetching food items:', err);
+      setFoodError(err.message);
+    } finally {
+      setLoadingFood(false);
+    }
+  };
+
+  // Get workers from selected site
+  useEffect(() => {
+    if (selectedSite && selectedSite.members) {
+      setLoadingWorkers(true);
+      
+      // Transform site members to worker format
+      const siteWorkers = selectedSite.members.map(member => ({
+        id: member.user.id.toString(),
+        name: `${member.user.first_name} ${member.user.last_name}`,
+        email: member.user.email,
+        staffNumber: member.user.staff_number,
+        image: `https://images.unsplash.com/photo-150${member.user.id}003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face`, // Generate unique images
+        department: 'Worker',
+        siteId: member.site,
+        orders: []
+      }));
+      
+      console.log('=== WORKERS FROM SELECTED SITE ===');
+      console.log('Site:', selectedSite.name);
+      console.log('Total Members:', siteWorkers.length);
+      siteWorkers.forEach((worker, index) => {
+        console.log(`Worker ${index + 1}:`, {
+          id: worker.id,
+          name: `${worker.first_name} ${worker.last_name}`,
+          email: worker.email,
+          staffNumber: worker.staffNumber
+        });
+      });
+      console.log('==================================');
+      
+      setWorkers(siteWorkers);
+      setSelectedWorker(siteWorkers[0] || null);
+      setLoadingWorkers(false);
+    } else {
+      console.warn('No site selected or site has no members');
+      setWorkers([]);
+      setSelectedWorker(null);
+      setLoadingWorkers(false);
+    }
+  }, [selectedSite]);
+
+  const animateSuccess = () => {
+    setShowSuccess(true);
+    Animated.sequence([
+      Animated.timing(successAnimation, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(successAnimation, {
+        toValue: 0,
+        duration: 200,
+        delay: 1000,
+        useNativeDriver: true,
+      })
+    ]).start(() => setShowSuccess(false));
+  };
 
   const logOrderData = () => {
+    if (!selectedWorker) {
+      console.warn('No worker selected');
+      return null;
+    }
+    
     const workerOrders = getWorkerOrders(selectedWorker.id);
     const orderData = {
       user_id: parseInt(selectedWorker.id),
@@ -132,21 +174,17 @@ export default function PlaceOrderComponent() {
         number_of_units: order.quantity.toString()
       }))
     };
-    
-    console.log('=== ORDER DATA FOR BACKEND ===');
-    console.log('Worker:', selectedWorker.name);
-    console.log('Worker ID:', selectedWorker.id);
-    console.log('Total Amount: KES', getWorkerOrderTotal(selectedWorker.id));
-    console.log('JSON Structure:', JSON.stringify(orderData, null, 2));
-    console.log('===============================');
-    
+
+    workerOrders.forEach(order => {
+      console.log(`- ${order.name}: ${order.quantity} x KSh ${order.price} = KSh ${order.quantity * order.price}`);
+    });
     return orderData;
   };
 
   const submitOrder = async () => {
     const orderData = logOrderData();
     
-    if (orderData.items.length === 0) {
+    if (!orderData || orderData.items.length === 0) {
       Alert.alert('No Items', 'Please add some items to the order first.');
       return;
     }
@@ -156,8 +194,7 @@ export default function PlaceOrderComponent() {
     try {
       const response = await apiRequest('POST', '/food/food-purchases/', orderData);
 
-      console.log(response, 'res');
-      
+      console.log(orderData, 'res');
       
       if (response.success) {
         console.log('✅ Order submitted successfully:', response.data);
@@ -170,8 +207,6 @@ export default function PlaceOrderComponent() {
               onPress: () => {
                 // Clear the order after successful submission
                 clearWorkerOrders(selectedWorker.id);
-                // Optionally navigate back
-                // router.back();
               }
             }
           ]
@@ -196,24 +231,12 @@ export default function PlaceOrderComponent() {
     }
   };
 
-  const animateSuccess = () => {
-    setShowSuccess(true);
-    Animated.sequence([
-      Animated.timing(successAnimation, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(successAnimation, {
-        toValue: 0,
-        duration: 200,
-        delay: 1000,
-        useNativeDriver: true,
-      })
-    ]).start(() => setShowSuccess(false));
-  };
-
   const updateQuantity = (itemId, change) => {
+    if (!selectedWorker) {
+      Alert.alert('No Worker Selected', 'Please select a worker first.');
+      return;
+    }
+    
     const currentOrders = getWorkerOrders(selectedWorker.id);
     const existingOrder = currentOrders.find(order => order.id === itemId);
     const currentQuantity = existingOrder ? existingOrder.quantity : 0;
@@ -221,7 +244,7 @@ export default function PlaceOrderComponent() {
     
     // If adding new item, add the full item object
     if (currentQuantity === 0 && change > 0) {
-      const foodItem = mockFoodItems.find(item => item.id === itemId);
+      const foodItem = foodItems.find(item => item.id === itemId);
       if (foodItem) {
         updateOrderQuantity(selectedWorker.id, itemId, newQuantity, foodItem);
       }
@@ -235,61 +258,87 @@ export default function PlaceOrderComponent() {
   };
 
   const getItemQuantity = (itemId) => {
+    if (!selectedWorker) return 0;
     const orders = getWorkerOrders(selectedWorker.id);
     const order = orders.find(o => o.id === itemId);
     return order ? order.quantity : 0;
   };
 
-  const renderWorkerSelector = () => (
-    <View className="px-4 py-4 bg-white border-b border-app-border">
-      <Text className="text-sm font-medium text-app-text-secondary mb-3">
-        {t('selectWorker')}
-      </Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View className="flex-row space-x-3">
-          {workers.map((worker) => {
-            const isSelected = selectedWorker.id === worker.id;
-            const orderCount = getWorkerOrderItemCount(worker.id);
-            
-            return (
-              <TouchableOpacity
-                key={worker.id}
-                onPress={() => setSelectedWorker(worker)}
-                className={`relative items-center p-3 rounded-2xl min-w-[80px] ${
-                  isSelected ? 'bg-app-primary-light border-2 border-app-primary' : 'bg-app-surface'
-                }`}
-              >
-                <View className="relative">
-                  <Image 
-                    source={{ uri: worker.image }}
-                    className="w-12 h-12 rounded-full"
-                    resizeMode="cover"
-                  />
-                  {/* Status Indicator */}
-                  <View className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
-                    worker.status === 'active' ? 'bg-app-primary' :
-                    worker.status === 'busy' ? 'bg-yellow-500' : 'bg-gray-400'
-                  }`} />
-                  
-                  {/* Order Count Badge */}
-                  {orderCount > 0 && (
-                    <View className="absolute -top-2 -right-2 w-6 h-6 bg-app-danger rounded-full justify-center items-center border-2 border-white">
-                      <Text className="text-white text-xs font-bold">{orderCount}</Text>
-                    </View>
-                  )}
-                </View>
-                <Text className={`text-xs font-medium mt-2 text-center ${
-                  isSelected ? 'text-app-primary' : 'text-app-text-secondary'
-                }`} numberOfLines={1}>
-                  {worker.name.split(' ')[0]}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+  const renderWorkerSelector = () => {
+    if (loadingWorkers) {
+      return (
+        <View className="px-4 py-4 bg-white border-b border-app-border">
+          <Text className="text-sm font-medium text-app-text-secondary mb-3">
+            {t('selectWorker')}
+          </Text>
+          <View className="items-center py-4">
+            <ActivityIndicator size="small" color="#4CAF50" />
+            <Text className="text-app-text-secondary text-sm mt-2">Loading workers...</Text>
+          </View>
         </View>
-      </ScrollView>
-    </View>
-  );
+      );
+    }
+
+    if (workers.length === 0) {
+      return (
+        <View className="px-4 py-4 bg-white border-b border-app-border">
+          <Text className="text-sm font-medium text-app-text-secondary mb-3">
+            {t('selectWorker')}
+          </Text>
+          <View className="items-center py-4">
+            <Text className="text-app-text-tertiary text-center">
+              No workers available. Please select a site first.
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View className="px-4 py-4 bg-white border-b border-app-border">
+        <Text className="text-sm font-medium text-app-text-secondary mb-3">
+          {t('selectWorker')} ({workers.length} available)
+        </Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View className="flex-row space-x-3">
+            {workers.map((worker) => {
+              const isSelected = selectedWorker?.id === worker.id;
+              const orderCount = getWorkerOrderItemCount(worker.id);
+              
+              return (
+                <TouchableOpacity
+                  key={worker.id}
+                  onPress={() => setSelectedWorker(worker)}
+                  className={`relative items-center p-3 rounded-2xl min-w-[80px] ${
+                    isSelected ? 'bg-app-primary-light border-2 border-app-primary' : 'bg-app-surface'
+                  }`}
+                >
+                  <View className="relative">
+                    <Image 
+                      source={{ uri: worker.image }}
+                      className="w-12 h-12 rounded-full"
+                      resizeMode="cover"
+                    />                    
+                    {/* Order Count Badge */}
+                    {orderCount > 0 && (
+                      <View className="absolute -top-2 -right-2 w-6 h-6 bg-app-danger rounded-full justify-center items-center border-2 border-white">
+                        <Text className="text-white text-xs font-bold">{orderCount}</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text className={`text-xs font-medium mt-2 text-center ${
+                    isSelected ? 'text-app-primary' : 'text-app-text-secondary'
+                  }`} numberOfLines={1}>
+                    {worker.name.split(' ')[0]}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </ScrollView>
+      </View>
+    );
+  };
 
   const renderFoodItem = ({ item, index }) => {
     const quantity = getItemQuantity(item.id);
@@ -306,12 +355,14 @@ export default function PlaceOrderComponent() {
             className="w-full h-32"
             resizeMode="cover"
           />
-          <View className="absolute top-2 left-2 bg-black/20 px-2 py-1 rounded-full">
-            <Text className="text-white text-xs font-medium">⭐ {item.rating}</Text>
-          </View>
           <View className="absolute top-2 right-2 bg-white/95 px-2 py-1 rounded-full">
-            <Text className="text-app-text-primary text-xs font-bold">KES {item.price}</Text>
+            <Text className="text-app-text-primary text-xs font-bold">KSh {item.price}</Text>
           </View>
+          {!item.available && (
+            <View className="absolute inset-0 bg-black/50 justify-center items-center">
+              <Text className="text-white font-bold text-sm">Unavailable</Text>
+            </View>
+          )}
         </View>
         
         {/* Food Details */}
@@ -324,32 +375,38 @@ export default function PlaceOrderComponent() {
           </Text>
           
           {/* Quantity Controls */}
-          {quantity === 0 ? (
-            <TouchableOpacity 
-              className="bg-app-primary py-2 px-4 rounded-full items-center"
-              onPress={() => updateQuantity(item.id, 1)}
-            >
-              <Text className="text-white text-sm font-bold">{t('addToOrder')}</Text>
-            </TouchableOpacity>
-          ) : (
-            <View className="flex-row items-center justify-between bg-app-surface-variant rounded-full p-1">
+          {item.available ? (
+            quantity === 0 ? (
               <TouchableOpacity 
-                className="w-8 h-8 bg-app-danger rounded-full justify-center items-center"
-                onPress={() => updateQuantity(item.id, -1)}
-              >
-                <Text className="text-white text-sm font-bold">−</Text>
-              </TouchableOpacity>
-              
-              <Text className="text-app-text-primary text-sm font-bold min-w-[20px] text-center">
-                {quantity}
-              </Text>
-              
-              <TouchableOpacity 
-                className="w-8 h-8 bg-app-primary rounded-full justify-center items-center"
+                className="bg-app-primary py-2 px-4 rounded-full items-center"
                 onPress={() => updateQuantity(item.id, 1)}
               >
-                <Text className="text-white text-sm font-bold">+</Text>
+                <Text className="text-white text-sm font-bold">{t('addToOrder')}</Text>
               </TouchableOpacity>
+            ) : (
+              <View className="flex-row items-center justify-between bg-app-surface-variant rounded-full p-1">
+                <TouchableOpacity 
+                  className="w-8 h-8 bg-app-danger rounded-full justify-center items-center"
+                  onPress={() => updateQuantity(item.id, -1)}
+                >
+                  <Text className="text-white text-sm font-bold">−</Text>
+                </TouchableOpacity>
+                
+                <Text className="text-app-text-primary text-sm font-bold min-w-[20px] text-center">
+                  {quantity}
+                </Text>
+                
+                <TouchableOpacity 
+                  className="w-8 h-8 bg-app-primary rounded-full justify-center items-center"
+                  onPress={() => updateQuantity(item.id, 1)}
+                >
+                  <Text className="text-white text-sm font-bold">+</Text>
+                </TouchableOpacity>
+              </View>
+            )
+          ) : (
+            <View className="bg-app-surface-variant py-2 px-4 rounded-full items-center">
+              <Text className="text-app-text-tertiary text-sm font-medium">Unavailable</Text>
             </View>
           )}
         </View>
@@ -357,8 +414,42 @@ export default function PlaceOrderComponent() {
     );
   };
 
-  const totalItems = getWorkerOrderItemCount(selectedWorker.id);
-  const totalAmount = getWorkerOrderTotal(selectedWorker.id);
+  const totalItems = selectedWorker ? getWorkerOrderItemCount(selectedWorker.id) : 0;
+  const totalAmount = selectedWorker ? getWorkerOrderTotal(selectedWorker.id) : 0;
+
+  // Show loading state if no site selected
+  if (!selectedSite) {
+    return (
+      <View className="flex-1 bg-app-background">
+        <StatusBar barStyle="dark-content" backgroundColor="white" />
+        
+        <View className="px-4 pt-12 pb-4 flex-row items-center border-b border-app-border bg-white">
+          <TouchableOpacity onPress={() => router.back()} className="mr-4">
+            <Text className="text-2xl text-app-text-primary">←</Text>
+          </TouchableOpacity>
+          <Text className="text-xl font-semibold text-center flex-1 mr-8 text-app-text-primary">
+            {t('title')}
+          </Text>
+        </View>
+
+        <View className="flex-1 items-center justify-center px-4">
+          <Text className="text-app-text-tertiary text-4xl mb-4">🏗️</Text>
+          <Text className="text-app-text-primary text-lg font-semibold mb-2 text-center">
+            No Site Selected
+          </Text>
+          <Text className="text-app-text-secondary text-center mb-6">
+            Please select a site first to view workers and place orders.
+          </Text>
+          <TouchableOpacity 
+            className="bg-app-primary px-6 py-3 rounded-lg"
+            onPress={() => router.back()}
+          >
+            <Text className="text-white font-medium">Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-app-background">
@@ -378,47 +469,83 @@ export default function PlaceOrderComponent() {
       {renderWorkerSelector()}
 
       {/* Selected Worker Info */}
-      <View className="px-4 py-4 bg-app-primary-light/50 border-b border-app-border">
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center flex-1">
-            <Image 
-              source={{ uri: selectedWorker.image }}
-              className="w-14 h-14 rounded-full mr-3"
-              resizeMode="cover"
-            />
-            <View className="flex-1">
-              <Text className="text-lg font-bold text-app-text-primary">
-                {selectedWorker.name}
-              </Text>
-              <Text className="text-sm text-app-text-secondary">
-                {selectedWorker.department} • {t(selectedWorker.status)}
-              </Text>
+      {selectedWorker ? (
+        <View className="px-4 py-4 bg-app-primary-light/50 border-b border-app-border">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center flex-1">
+              <Image 
+                source={{ uri: selectedWorker.image }}
+                className="w-14 h-14 rounded-full mr-3"
+                resizeMode="cover"
+              />
+              <View className="flex-1">
+                <Text className="text-lg font-bold text-app-text-primary">
+                  {selectedWorker.name}
+                </Text>
+                <Text className="text-sm text-app-text-secondary">
+                  {selectedWorker.staffNumber} • {t(selectedWorker.status)}
+                </Text>
+              </View>
             </View>
+            {totalItems > 0 && (
+              <View className="bg-app-primary px-3 py-2 rounded-full">
+                <Text className="text-white text-sm font-bold">
+                  {totalItems} {t('items')}
+                </Text>
+              </View>
+            )}
           </View>
-          {totalItems > 0 && (
-            <View className="bg-app-primary px-3 py-2 rounded-full">
-              <Text className="text-white text-sm font-bold">
-                {totalItems} {t('items')}
-              </Text>
-            </View>
-          )}
         </View>
-      </View>
+      ) : (
+        <View className="px-4 py-4 bg-app-surface border-b border-app-border">
+          <Text className="text-app-text-secondary text-center">
+            Please select a worker to place an order
+          </Text>
+        </View>
+      )}
 
       {/* Food Items Grid */}
-      <FlatList
-        data={mockFoodItems}
-        renderItem={renderFoodItem}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ 
-          paddingHorizontal: 16,
-          paddingTop: 16,
-          paddingBottom: totalItems > 0 ? 140 : 20 
-        }}
-        columnWrapperStyle={{ justifyContent: 'space-between' }}
-      />
+      {loadingFood ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#4CAF50" />
+          <Text className="text-app-text-secondary mt-4">{t('loading')}</Text>
+        </View>
+      ) : foodError ? (
+        <View className="flex-1 items-center justify-center px-4">
+          <Text className="text-app-text-secondary text-center mb-4">
+            {t('error')}: {foodError}
+          </Text>
+          <TouchableOpacity 
+            onPress={fetchFoodItems}
+            className="bg-app-primary px-6 py-3 rounded-lg"
+          >
+            <Text className="text-white font-medium">{t('retry')}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList
+          data={foodItems}
+          renderItem={renderFoodItem}
+          keyExtractor={(item) => `${item.menuId}-${item.id}`}
+          numColumns={2}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ 
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: totalItems > 0 ? 140 : 20 
+          }}
+          columnWrapperStyle={{ justifyContent: 'space-between' }}
+          refreshing={loadingFood}
+          onRefresh={fetchFoodItems}
+          ListEmptyComponent={
+            <View className="items-center justify-center py-12">
+              <Text className="text-app-text-secondary text-base text-center">
+                No food items available
+              </Text>
+            </View>
+          }
+        />
+      )}
 
       {/* Success Animation */}
       {showSuccess && (
@@ -463,7 +590,7 @@ export default function PlaceOrderComponent() {
             </Text>
             <View className="bg-white/20 px-3 py-1 rounded-full">
               <Text className="text-white text-sm font-bold">
-                KES {totalAmount}
+                KSh {totalAmount}
               </Text>
             </View>
           </TouchableOpacity>

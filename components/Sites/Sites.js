@@ -133,24 +133,81 @@ export default function SitesComponent() {
     }
   }, [pagination.next, pagination.currentPage, searchQuery, loadingMore]);
 
-  const handleSelectSite = (site) => {
-    console.log('Selected site:', {
-      id: site.id,
-      name: site.name,
-      location: site.location,
-      dailyWageRate: site.daily_wage_rate,
-      membersCount: site.members_count,
-      managersCount: site.managers_count
-    });
-    
-    setSelectedSite(site);
-    
-    // Navigate to site management or show success
-    Alert.alert(
-      'Site Selected',
-      `You have selected ${site.name}`,
-      [{ text: 'OK' }]
-    );
+  const fetchSiteDetails = async (siteId) => {
+    try {
+      console.log(`Fetching detailed information for site ID: ${siteId}`);
+      
+      const response = await apiRequest('GET', `/sites/${siteId}`);
+      
+      if (response.success) {
+        const siteDetails = response.data;
+        
+        console.log('=== DETAILED SITE INFORMATION ===');
+        console.log('Site ID:', siteDetails.id);
+        console.log('Name:', siteDetails.name);
+        console.log('Location:', siteDetails.location);
+        console.log('Auto Execute Accruals:', siteDetails.auto_execute_accruals);
+        console.log('Daily Wage Rate:', siteDetails.daily_wage_rate);
+        console.log('Created At:', siteDetails.created_at);
+        console.log('Members Count:', siteDetails.members?.length || 0);
+        console.log('Managers Count:', siteDetails.managers?.length || 0);
+        
+        console.log('\n--- MEMBERS ---');
+        siteDetails.members?.forEach((member, index) => {
+          console.log(`Member ${index + 1}:`, {
+            id: member.id,
+            email: member.user.email,
+            name: `${member.user.first_name} ${member.user.last_name}`,
+            staffNumber: member.user.staff_number,
+            siteId: member.site
+          });
+        });
+        
+        console.log('\n--- MANAGERS ---');
+        siteDetails.managers?.forEach((manager, index) => {
+          console.log(`Manager ${index + 1}:`, {
+            id: manager.id,
+            email: manager.user.email,
+            name: `${manager.user.first_name} ${manager.user.last_name}`,
+            staffNumber: manager.user.staff_number,
+            siteId: manager.site
+          });
+        });
+        
+        console.log('\nComplete Site Object:', JSON.stringify(siteDetails, null, 2));
+        console.log('==================================');
+        
+        // Store the detailed site information
+        setSelectedSite(siteDetails);
+        
+        Alert.alert(
+          'Site Selected',
+          `${siteDetails.name} loaded with ${siteDetails.members?.length || 0} members and ${siteDetails.managers?.length || 0} managers`,
+          [{ text: 'OK' }]
+        );
+        
+        return siteDetails;
+      } else {
+        console.error('Failed to fetch site details:', response.error);
+        Alert.alert(
+          'Error',
+          `Failed to load site details: ${response.error?.message || 'Unknown error'}`,
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      console.error('Network error fetching site details:', error);
+      Alert.alert(
+        'Network Error',
+        'Unable to load site details. Please check your connection.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const handleSelectSite = async (site) => {
+    console.log('Site selected from list:', site.name);
+    await fetchSiteDetails(site.id);
   };
 
   const renderSiteCard = ({ item }) => (

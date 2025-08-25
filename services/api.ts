@@ -4,14 +4,14 @@ import axios from "axios";
 // Create an axios instance
 const api = axios.create({
   // baseURL: "https://your-api.com/api",
-  baseURL: "https://9db0e682ca4d.ngrok-free.app/api",
+  baseURL: "https://59088ac56d5d.ngrok-free.app/api",
   timeout: 10000,
 });
 
 api.interceptors.request.use(
   async (config) => {
     // const token = await SecureStore.getItemAsync("token"); // <-- retrieve saved token
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU2MDc0MzYwLCJpYXQiOjE3NTYwNTk5NjAsImp0aSI6IjZkZmI2OTI0ZjkyYTQ1ZDA5MTA2MDUwYjY3N2I2ODU0IiwidXNlcl9pZCI6MX0.tN9HJVkTgZBSgizALO4RuwV6zIvTazCxSWwYmBboiGc"
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU2MDc2NTgyLCJpYXQiOjE3NTYwNjIxODIsImp0aSI6IjAwNmJiODI1NDIwNDQyZmFiM2FmYzI0NTEwYzI5YjMxIiwidXNlcl9pZCI6MX0.0ftbOoLli3It1fuB_gjhfaMokPcNHg6rDChaHEryg2o"
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
