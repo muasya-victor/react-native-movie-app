@@ -1,26 +1,32 @@
 {
   "en": {
-    "appTitle": "MyPay",
-    "enterPhoneNumber": "Enter your phone number",
-    "phoneNumberPlaceholder": "Phone number",
-    "login": "Login",
+    "appTitle": "WorkerApp",
+    "enterPhoneNumber": "Enter your phone number to get started",
+    "phoneNumberPlaceholder": "+254712345678",
+    "phoneNumberHint": "We'll send a verification code to this number",
+    "phoneNumberRequired": "Phone number is required",
+    "phoneNumberInvalid": "Please enter a valid phone number",
+    "continue": "Continue",
+    "validationError": "Validation Error",
+    "ok": "OK",
     "termsText": "By continuing, you agree to our",
     "termsOfService": "Terms of Service",
     "and": "and",
-    "privacyPolicy": "Privacy Policy",
-    "languageSwitch": "SW",
-    "currentLanguage": "EN"
+    "privacyPolicy": "Privacy Policy"
   },
   "sw": {
-    "appTitle": "MyPay",
-    "enterPhoneNumber": "Ingiza nambari yako ya simu",
-    "phoneNumberPlaceholder": "Nambari ya simu",
-    "login": "Ingia",
-    "termsText": "Kwa kuendelea, unakubali",
+    "appTitle": "Programu ya Mfanyakazi",
+    "enterPhoneNumber": "Ingiza nambari yako ya simu ili uanze",
+    "phoneNumberPlaceholder": "+254712345678",
+    "phoneNumberHint": "Tutatuma msimbo wa uhakiki kwenye nambari hii",
+    "phoneNumberRequired": "Nambari ya simu inahitajika",
+    "phoneNumberInvalid": "Tafadhali ingiza nambari sahihi ya simu",
+    "continue": "Endelea",
+    "validationError": "Hitilafu ya Uthibitisho",
+    "ok": "SAWA",
+    "termsText": "Kwa kuendelea, unakubaliana na",
     "termsOfService": "Masharti ya Huduma",
     "and": "na",
-    "privacyPolicy": "Sera ya Faragha",
-    "languageSwitch": "EN",
-    "currentLanguage": "SW"
+    "privacyPolicy": "Sera ya Faragha"
   }
 }
