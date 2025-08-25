@@ -4,14 +4,14 @@ import axios from "axios";
 // Create an axios instance
 const api = axios.create({
   // baseURL: "https://your-api.com/api",
-  baseURL: "http://192.168.1.203:8000/api",
+  baseURL: "http://192.168.100.72:8000/api",
   timeout: 10000,
 });
 
 api.interceptors.request.use(
   async (config) => {
     // const token = await SecureStore.getItemAsync("token"); // <-- retrieve saved token
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU2MTI4NTU5LCJpYXQiOjE3NTYxMTQxNTksImp0aSI6ImY4ZTIzYTY5MjZmYTQ0ODc5OWY3NmFmNWQ5YTk2YmM5IiwidXNlcl9pZCI6MX0.2Ubjx7WtHbOu9wWHsTBkjkYUhMGNfSqHhSJiM9KRyt0"
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU2MTU0Nzk2LCJpYXQiOjE3NTYxNDAzOTYsImp0aSI6ImYwYjk0NDExNDkzNTRkYjdhOTNlMzg0ZjI3YjM2NzFkIiwidXNlcl9pZCI6N30.eDD9a2c6nIMD5Eti0G9nEgpB6YtMkn02IhcasyQ3vLw"
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -29,10 +29,6 @@ export async function apiRequest(method, endpoint, data = null, headers = {}) {
       data,
       headers,
     });
-
-    console.log(data, 'data');
-    
-
     return {
       success: true,
       data: response.data,
