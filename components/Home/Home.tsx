@@ -255,7 +255,7 @@ export default function HomeComponent() {
 
             {/* Balance Amount */}
             <View className="px-4">
-              <Text className="text-2xl font-bold text-black mb-1 text-center">
+              <Text className="text-5xl font-bold text-black mb-1 text-center">
                 {formatCurrency(currentBalance)}
               </Text>
               <Text className="text-green-600 text-sm mb-4 text-center">
