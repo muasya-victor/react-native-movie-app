@@ -71,10 +71,9 @@ export default function HomeComponent() {
   };
 
   // Get balance values with fallbacks
-  const currentBalance = wallet ? parseFloat(wallet.balance || 10) : 0;
-  // const currentBalance = wallet ? parseFloat(10) : 0;
-  const accruedBalance = wallet ? parseFloat(wallet.all_time_accrued_balance || 0) : 0;
-  const pendingBalance = wallet ? parseFloat(wallet.pending_accrued_balance || 0) : 0;
+  const currentBalance = wallet ? parseFloat(wallet?.balance || 10) : 0;
+  const accruedBalance = wallet ? parseFloat(wallet?.all_time_accrued_balance || 0) : 0;
+  const pendingBalance = wallet ? parseFloat(wallet?.pending_accrued_balance || 0) : 0;
 
   return (
     <View className="flex-1 bg-white">
