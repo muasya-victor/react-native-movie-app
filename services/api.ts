@@ -14,7 +14,7 @@ const getTokenFromStore = () => {
     const store = useUserStore.getState();
     return store.accessToken;
   } catch (error) {
-    console.warn('Could not access user store:', error);
+    console.warn("Could not access user store:", error);
     return null;
   }
 };
@@ -24,9 +24,9 @@ const refreshAccessToken = async () => {
   try {
     const store = useUserStore.getState();
     const refreshToken = store.refreshToken;
-    
+
     if (!refreshToken) {
-      throw new Error('No refresh token available');
+      throw new Error("No refresh token available");
     }
 
     const response = await axios.post(
@@ -36,18 +36,18 @@ const refreshAccessToken = async () => {
     );
 
     const { access } = response.data;
-    
+
     // Update the store with new access token
     store.setTokens(access, refreshToken);
-    
+
     return access;
   } catch (error) {
-    console.error('Token refresh failed:', error);
-    
+    console.error("Token refresh failed:", error);
+
     // If refresh fails, logout user
     const store = useUserStore.getState();
     store.logout();
-    
+
     throw error;
   }
 };
@@ -56,11 +56,11 @@ const refreshAccessToken = async () => {
 api.interceptors.request.use(
   async (config) => {
     const token = getTokenFromStore();
-    
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -78,18 +78,17 @@ api.interceptors.response.use(
 
       try {
         const newToken = await refreshAccessToken();
-        
+
         // Retry the original request with new token
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
-        
       } catch (refreshError) {
-        console.error('Token refresh failed, redirecting to login');
-        
+        console.error("Token refresh failed, redirecting to login");
+
         // Handle logout/redirect logic here if needed
         // For React Native with Expo Router, you might want to:
         // router.replace('/login');
-        
+
         return Promise.reject(refreshError);
       }
     }
@@ -125,7 +124,12 @@ export async function apiRequest(method, endpoint, data = null, headers = {}) {
 }
 
 // Specific API functions that don't require authentication
-export async function apiRequestNoAuth(method, endpoint, data = null, headers = {}) {
+export async function apiRequestNoAuth(
+  method,
+  endpoint,
+  data = null,
+  headers = {}
+) {
   try {
     const response = await axios.request({
       method,
@@ -141,7 +145,10 @@ export async function apiRequestNoAuth(method, endpoint, data = null, headers = 
       status: response.status,
     };
   } catch (error) {
-    console.error(`API Request (No Auth) Error [${method} ${endpoint}]:`, error);
+    console.error(
+      `API Request (No Auth) Error [${method} ${endpoint}]:`,
+      error
+    );
 
     return {
       success: false,
