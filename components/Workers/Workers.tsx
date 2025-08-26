@@ -18,14 +18,16 @@ import AppleStyleHeader from "../common/AppleStyleHeader";
 import translations from "./translations.json";
 
 type SortOption = "name" | "role" | "status";
+type TabOption = "all" | "managers" | "members";
 
 export default function WorkersComponent() {
   const router = useRouter();
   const { t, currentLanguage } = useTranslation(translations);
 
-  // Local state for search and sort
+  // Local state for search, sort, and tabs
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("name");
+  const [activeTab, setActiveTab] = useState<TabOption>("members");
 
   // Zustand store - using selectedSite as primary source
   const {
@@ -43,14 +45,26 @@ export default function WorkersComponent() {
     fetchCurrentSite();
   }, [fetchCurrentSite]);
 
+  // Get workers by tab filter
+  const getWorkersByTab = useMemo(() => {
+    switch (activeTab) {
+      case "managers":
+        return workers.filter((worker) => worker.role === "Manager");
+      case "members":
+        return workers.filter((worker) => worker.role !== "Manager");
+      default:
+        return workers;
+    }
+  }, [workers, activeTab]);
+
   // Filtered and sorted workers
   const filteredAndSortedWorkers = useMemo(() => {
-    let filtered = workers;
+    let filtered = getWorkersByTab;
 
     // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = workers.filter(
+      filtered = getWorkersByTab.filter(
         (worker) =>
           worker.name.toLowerCase().includes(query) ||
           worker.email.toLowerCase().includes(query) ||
@@ -77,7 +91,16 @@ export default function WorkersComponent() {
           return a.name.localeCompare(b.name);
       }
     });
-  }, [workers, searchQuery, sortBy]);
+  }, [getWorkersByTab, searchQuery, sortBy]);
+
+  // Get counts for each tab
+  const tabCounts = useMemo(() => {
+    return {
+      all: workers.length,
+      managers: workers.filter((w) => w.role === "Manager").length,
+      members: workers.filter((w) => w.role !== "Manager").length,
+    };
+  }, [workers]);
 
   // Handle refresh
   const handleRefresh = async () => {
@@ -102,6 +125,35 @@ export default function WorkersComponent() {
   // Handle sort option change
   const handleSortChange = (option: SortOption) => {
     setSortBy(option);
+  };
+
+  // Handle tab change
+  const handleTabChange = (tab: TabOption) => {
+    setActiveTab(tab);
+    setSearchQuery(""); // Clear search when switching tabs
+  };
+
+  // Render tab button
+  const renderTabButton = (tab: TabOption, label: string, count: number) => {
+    const isActive = activeTab === tab;
+
+    return (
+      <TouchableOpacity
+        key={tab}
+        className={`flex-1 py-3 px-4 rounded-lg border ${
+          isActive ? "bg-blue-500 border-blue-500" : "bg-white border-gray-200"
+        }`}
+        onPress={() => handleTabChange(tab)}
+      >
+        <Text
+          className={`text-center font-medium ${
+            isActive ? "text-white" : "text-gray-700"
+          }`}
+        >
+          {label} ({count})
+        </Text>
+      </TouchableOpacity>
+    );
   };
 
   // Render worker item
@@ -150,20 +202,22 @@ export default function WorkersComponent() {
               </Text>
             </View>
 
-            {/* Role Badge */}
-            <View
-              className={`px-2 py-1 rounded-full ${
-                item.role === "Manager" ? "bg-blue-100" : "bg-gray-100"
-              }`}
-            >
-              <Text
-                className={`text-xs font-medium ${
-                  item.role === "Manager" ? "text-blue-700" : "text-gray-700"
+            {/* Role Badge - Only show if viewing "All" tab */}
+            {activeTab === "all" && (
+              <View
+                className={`px-2 py-1 rounded-full ${
+                  item.role === "Manager" ? "bg-blue-100" : "bg-gray-100"
                 }`}
               >
-                {t(item.role.toLowerCase()) || item.role}
-              </Text>
-            </View>
+                <Text
+                  className={`text-xs font-medium ${
+                    item.role === "Manager" ? "text-blue-700" : "text-gray-700"
+                  }`}
+                >
+                  {t(item.role.toLowerCase()) || item.role}
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* Staff Number */}
@@ -187,6 +241,35 @@ export default function WorkersComponent() {
   // Handle add worker
   const handleAddWorker = () => {
     router.push("/add-worker");
+  };
+
+  // Get empty state message based on active tab
+  const getEmptyStateMessage = () => {
+    switch (activeTab) {
+      case "managers":
+        return {
+          title: t("noManagersFound") || "No managers found",
+          description:
+            t("noManagersDescription") ||
+            "No managers match your search criteria",
+        };
+      case "members":
+        return {
+          title: t("noMembersFound") || "No members found",
+          description:
+            t("noMembersDescription") ||
+            "No team members match your search criteria",
+        };
+      default:
+        return {
+          title: t("noWorkersFound") || "No workers found",
+          description: searchQuery.trim()
+            ? t("noSearchResultsDescription") ||
+              `No workers found matching "${searchQuery}"`
+            : t("noWorkersDescription") ||
+              "Add your first worker to get started",
+        };
+    }
   };
 
   // Loading state
@@ -246,6 +329,8 @@ export default function WorkersComponent() {
     );
   }
 
+  const emptyState = getEmptyStateMessage();
+
   return (
     <>
       <AppleStyleHeader
@@ -253,10 +338,8 @@ export default function WorkersComponent() {
         subText={`${workers.length} ${t("workers") || "workers"}`}
       />
       <View className="flex-1 bg-app-background">
-        {/* <StatusBar barStyle="dark-content" backgroundColor="white" /> */}
-
         {/* Header */}
-        <View className="px-4  pb-4 bg-white border-b border-app-border">
+        <View className="px-4 pb-4 bg-white border-b border-app-border">
           {/* Site Info */}
           {selectedSite && (
             <View className="mb-4 p-3 bg-blue-50 rounded-lg">
@@ -270,6 +353,20 @@ export default function WorkersComponent() {
               </Text>
             </View>
           )}
+
+          {/* Tab Navigation */}
+          <View className="flex-row space-x-2 mb-4">
+            {renderTabButton(
+              "members",
+              t("members") || "Members",
+              tabCounts.members
+            )}
+            {renderTabButton(
+              "managers",
+              t("managers") || "Managers",
+              tabCounts.managers
+            )}
+          </View>
 
           {/* Search Bar */}
           <View className="mb-4">
@@ -309,22 +406,25 @@ export default function WorkersComponent() {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              className={`px-3 py-2 rounded-full border ${
-                sortBy === "role"
-                  ? "bg-blue-100 border-blue-300"
-                  : "bg-gray-100 border-gray-200"
-              }`}
-              onPress={() => handleSortChange("role")}
-            >
-              <Text
-                className={`text-xs font-medium ${
-                  sortBy === "role" ? "text-blue-700" : "text-gray-600"
+            {/* Only show role sort option for "all" tab */}
+            {activeTab === "all" && (
+              <TouchableOpacity
+                className={`px-3 py-2 rounded-full border ${
+                  sortBy === "role"
+                    ? "bg-blue-100 border-blue-300"
+                    : "bg-gray-100 border-gray-200"
                 }`}
+                onPress={() => handleSortChange("role")}
               >
-                {t("role") || "Role"}
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  className={`text-xs font-medium ${
+                    sortBy === "role" ? "text-blue-700" : "text-gray-600"
+                  }`}
+                >
+                  {t("role") || "Role"}
+                </Text>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               className={`px-3 py-2 rounded-full border ${
@@ -362,33 +462,24 @@ export default function WorkersComponent() {
               />
             }
           />
-        ) : searchQuery.trim() ? (
-          <View className="flex-1 items-center justify-center px-4">
-            <Text className="text-app-text-primary text-lg font-medium mb-2">
-              {t("noSearchResults") || "No search results"}
-            </Text>
-            <Text className="text-app-text-secondary text-center mb-6">
-              {t("noSearchResultsDescription") ||
-                `No workers found matching "${searchQuery}"`}
-            </Text>
-            <TouchableOpacity
-              className="bg-gray-200 py-2 px-4 rounded-lg"
-              onPress={() => setSearchQuery("")}
-            >
-              <Text className="text-gray-700 font-medium">
-                {t("clearSearch") || "Clear search"}
-              </Text>
-            </TouchableOpacity>
-          </View>
         ) : (
           <View className="flex-1 items-center justify-center px-4">
             <Text className="text-app-text-primary text-lg font-medium mb-2">
-              {t("noWorkersFound") || "No workers found"}
+              {emptyState.title}
             </Text>
             <Text className="text-app-text-secondary text-center mb-6">
-              {t("noWorkersDescription") ||
-                "Add your first worker to get started"}
+              {emptyState.description}
             </Text>
+            {searchQuery.trim() && (
+              <TouchableOpacity
+                className="bg-gray-200 py-2 px-4 rounded-lg"
+                onPress={() => setSearchQuery("")}
+              >
+                <Text className="text-gray-700 font-medium">
+                  {t("clearSearch") || "Clear search"}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
