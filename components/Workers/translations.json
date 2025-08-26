@@ -13,11 +13,18 @@
     "manager": "Manager",
     "active": "Active",
     "inactive": "Inactive",
-    "noSearchResults": "No search results",
-    "noSearchResultsDescription": "No workers found matching your search",
     "clearSearch": "Clear search",
+    "members": "Members",
+
+    "noManagersFound": "No managers found",
+    "noManagersDescription": "No managers match your search criteria",
+    "noMembersFound": "No members found",
+    "noMembersDescription": "No team members match your search criteria",
+
     "noWorkersFound": "No workers found",
-    "noWorkersDescription": "Add your first worker to get started"
+    "noWorkersDescription": "Add your first worker to get started",
+    "noSearchResults": "No search results",
+    "noSearchResultsDescription": "No workers found matching your search"
   },
   "sw": {
     "searchWorkers": "Tafuta wafanyakazi...",
@@ -27,16 +34,21 @@
     "role": "Jukumu",
     "status": "Hali",
     "workers": "wafanyakazi",
-    "managers": "mameneja",
     "staffNumber": "Nambari ya Kazi",
     "member": "Mwanachama",
     "manager": "Meneja",
     "active": "Hai",
     "inactive": "Haikai",
-    "noSearchResults": "Hakuna matokeo ya utafutaji",
-    "noSearchResultsDescription": "Hakuna mfanyakazi aliyepatikana",
     "clearSearch": "Futa utafutaji",
+    "managers": "Wasimamizi",
+    "members": "Wanachama",
+    "noManagersFound": "Hakuna wasimamizi waliopatikana",
+    "noManagersDescription": "Hakuna wasimamizi wanaolingana na vigezo vyako vya utafutaji",
+    "noMembersFound": "Hakuna wanachama waliopatikana",
+    "noMembersDescription": "Hakuna wanachama wa timu wanaolingana na utafutaji wako",
     "noWorkersFound": "Hakuna wafanyakazi waliopatikana",
-    "noWorkersDescription": "Ongeza mfanyakazi wako wa kwanza kuanza"
+    "noWorkersDescription": "Ongeza mfanyakazi wako wa kwanza kuanza",
+    "noSearchResults": "Hakuna matokeo ya utafutaji",
+    "noSearchResultsDescription": "Hakuna wafanyakazi waliopatikana wanaolingana na utafutaji wako"
   }
 }
