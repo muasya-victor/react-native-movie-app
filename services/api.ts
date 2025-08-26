@@ -4,7 +4,8 @@ import { useUserStore } from "../store/userStore";
 
 // Create an axios instance
 const api = axios.create({
-  baseURL: "http://192.168.100.72:8000/api",
+  // baseURL: "http://192.168.100.72:8000/api",
+  baseURL: "http://192.168.1.203:8000/api",
   timeout: 10000,
 });
 
