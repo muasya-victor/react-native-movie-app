@@ -3,9 +3,8 @@ import axios from "axios";
 
 // Create an axios instance
 const api = axios.create({
-  // baseURL: "https://your-api.com/api",
-  baseURL: "http://192.168.100.72:8000/api",
-  timeout: 10000,
+  baseURL: process.env.API_BASE_URL || "http://192.168.100.70:8000/api",
+  timeout: Number(process.env.API_TIMEOUT) || 10000,
 });
 
 api.interceptors.request.use(
