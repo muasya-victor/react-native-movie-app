@@ -2,17 +2,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    Alert,
-    FlatList,
-    StatusBar,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from '../../hooks/useTranslation';
+import AppleStyleHeader from "../common/AppleStyleHeader";
 import translations from './translations.json';
-
 
 export default function WithdrawalRequestsComponent() {
   const router = useRouter();
@@ -70,13 +70,13 @@ export default function WithdrawalRequestsComponent() {
       t('approveRequestMessage', { name: workerName, amount: amount }),
       [
         { text: t('cancel'), style: 'cancel' },
-        { 
-          text: t('approve'), 
+        {
+          text: t('approve'),
           onPress: () => {
             // Update the request status
-            setWithdrawalRequests(prev => 
-              prev.map(req => 
-                req.id === requestId 
+            setWithdrawalRequests(prev =>
+              prev.map(req =>
+                req.id === requestId
                   ? { ...req, status: 'approved' }
                   : req
               )
@@ -95,14 +95,14 @@ export default function WithdrawalRequestsComponent() {
       t('declineRequestMessage', { name: workerName }),
       [
         { text: t('cancel'), style: 'cancel' },
-        { 
-          text: t('decline'), 
+        {
+          text: t('decline'),
           style: 'destructive',
           onPress: () => {
             // Update the request status
-            setWithdrawalRequests(prev => 
-              prev.map(req => 
-                req.id === requestId 
+            setWithdrawalRequests(prev =>
+              prev.map(req =>
+                req.id === requestId
                   ? { ...req, status: 'declined' }
                   : req
               )
@@ -117,13 +117,12 @@ export default function WithdrawalRequestsComponent() {
 
   const renderPendingRequest = ({ item }) => {
     const isExpanded = expandedRequest === item.id;
-    
+
     return (
-      <View className={`rounded-lg mb-4 mx-4 overflow-hidden ${
-        isExpanded ? 'bg-app-primary-light' : ''
-      }`}>
+      <View className={`rounded-lg mb-4 mx-4 overflow-hidden ${isExpanded ? 'bg-app-primary-light' : ''
+        }`}>
         {/* Main Request Card - Always Visible */}
-        <TouchableOpacity 
+        <TouchableOpacity
           className="p-4"
           onPress={() => handleToggleExpand(item.id)}
           activeOpacity={0.7}
@@ -147,12 +146,12 @@ export default function WithdrawalRequestsComponent() {
                 KES {item.amount.toLocaleString()}
               </Text>
               {/* Expand/Collapse Indicator */}
-              <Ionicons 
-                name={isExpanded ? "chevron-up" : "chevron-down"} 
-                size={18} 
-                color="#9E9E9E" 
+              <Ionicons
+                name={isExpanded ? "chevron-up" : "chevron-down"}
+                size={18}
+                color="#9E9E9E"
                 style={{ marginTop: 4 }}
-                />
+              />
             </View>
           </View>
         </TouchableOpacity>
@@ -170,7 +169,7 @@ export default function WithdrawalRequestsComponent() {
                   {t('decline')}
                 </Text>
               </TouchableOpacity> */}
-              <TouchableOpacity 
+              <TouchableOpacity
                 className="flex-1 bg-app-primary rounded-lg py-3"
                 onPress={() => handleApprove(item.id, item.workerName, item.amount)}
               >
@@ -186,7 +185,7 @@ export default function WithdrawalRequestsComponent() {
   };
 
   const renderProcessedRequest = ({ item }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       className="bg-app-surface rounded-lg p-4 mb-3 mx-4"
       activeOpacity={0.6}
     >
@@ -208,16 +207,14 @@ export default function WithdrawalRequestsComponent() {
           <Text className="text-sm font-bold text-app-text-primary">
             KES {item.amount.toLocaleString()}
           </Text>
-          <View className={`px-2 py-1 rounded-full mt-1 ${
-            item.status === 'approved' 
-              ? 'bg-app-primary-light' 
-              : 'bg-app-danger-light'
-          }`}>
-            <Text className={`text-xs font-medium ${
-              item.status === 'approved' 
-                ? 'text-app-primary' 
-                : 'text-app-danger'
+          <View className={`px-2 py-1 rounded-full mt-1 ${item.status === 'approved'
+            ? 'bg-app-primary-light'
+            : 'bg-app-danger-light'
             }`}>
+            <Text className={`text-xs font-medium ${item.status === 'approved'
+              ? 'text-app-primary'
+              : 'text-app-danger'
+              }`}>
               {item.status === 'approved' ? t('approved') : t('declined')}
             </Text>
           </View>
@@ -232,16 +229,12 @@ export default function WithdrawalRequestsComponent() {
   return (
     <View className="flex-1 bg-app-background">
       <StatusBar barStyle="dark-content" backgroundColor="white" />
-      
+
       {/* Header */}
-      <View className="px-4 pt-12 pb-4 flex-row items-center border-b border-app-border">
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <Text className="text-2xl text-app-text-primary">←</Text>
-        </TouchableOpacity>
-        <Text className="text-xl font-semibold text-center flex-1 mr-8 text-app-text-primary">
-          {t('withdrawalRequests')}
-        </Text>
-      </View>
+
+      <AppleStyleHeader
+        title={t("withdrawalRequests") || "Withdrawal Requests"}
+      />
 
       <FlatList
         data={[]}

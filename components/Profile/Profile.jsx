@@ -12,23 +12,24 @@ import {
 } from "react-native";
 import { useTranslation } from '../../hooks/useTranslation';
 import { useUserStore } from '../../store/userStore';
+import AppleStyleHeader from "../common/AppleStyleHeader";
 import translations from './translations.json';
 
 export default function ProfileComponent() {
   const router = useRouter();
   const { t, currentLanguage, changeLanguage } = useTranslation(translations);
-  
+
   // Get user data from store
-  const { 
-    user, 
-    logout, 
-    getFullName, 
+  const {
+    user,
+    logout,
+    getFullName,
     getUserType,
     isWageWorker,
     isSiteManager,
-    isSystemAdmin 
+    isSystemAdmin
   } = useUserStore();
-  
+
   const [phoneNumber, setPhoneNumber] = useState(user?.username || user?.phone_number || "");
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [tempPhoneNumber, setTempPhoneNumber] = useState(phoneNumber);
@@ -83,7 +84,7 @@ export default function ProfileComponent() {
   // Get user role display text
   const getUserRoleDisplay = () => {
     const userType = getUserType();
-    switch(userType) {
+    switch (userType) {
       case 'WageWorker':
         return t('wageWorker');
       case 'SiteManager':
@@ -106,16 +107,14 @@ export default function ProfileComponent() {
   return (
     <View className="flex-1 bg-app-background">
       <StatusBar barStyle="dark-content" backgroundColor="white" />
-      
+
       {/* Header */}
-      <View className="bg-app-background px-4 pt-12 pb-4 flex-row items-center border-b border-app-border">
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <Text className="text-2xl text-app-text-primary">←</Text>
-        </TouchableOpacity>
-        <Text className="text-xl font-semibold text-center flex-1 mr-8 text-app-text-primary">
-          {t('title')}
-        </Text>
-      </View>
+
+      <AppleStyleHeader
+        title={t('title')}
+        subText={t('viewAndEditProfile')}
+        onMoreActionsPress={() => console.log('More actions')}
+      />
 
       <ScrollView
         className="flex-1"
@@ -280,7 +279,7 @@ export default function ProfileComponent() {
             {/* Modal Header */}
             <View className="px-6 py-5 border-b border-app-border">
               <View className="flex-row items-center">
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => setShowLanguageModal(false)}
                   className="mr-4"
                 >

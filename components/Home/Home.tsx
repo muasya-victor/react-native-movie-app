@@ -1,4 +1,4 @@
-import { apiRequest } from '@/services/api';
+import { apiRequest } from "@/services/api";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -12,17 +12,17 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
-import { useTranslation } from '../../hooks/useTranslation';
-import translations from './translations.json';
+import { useTranslation } from "../../hooks/useTranslation";
+import translations from "./translations.json";
 
 export default function HomeComponent() {
   const router = useRouter();
   const { t, currentLanguage } = useTranslation(translations);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showLoanModal, setShowLoanModal] = useState(false);
-  const [loanAmount, setLoanAmount] = useState('');
+  const [loanAmount, setLoanAmount] = useState("");
   const [wallet, setWallet] = useState(null);
   const [loanEligibility, setLoanEligibility] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +32,7 @@ export default function HomeComponent() {
 
   const formatCurrency = (amount, currency = "KES") => {
     // Use locale based on current language
-    const locale = currentLanguage === 'sw' ? 'sw-KE' : 'en-KE';
+    const locale = currentLanguage === "sw" ? "sw-KE" : "en-KE";
     return new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
@@ -41,11 +41,11 @@ export default function HomeComponent() {
 
   const fetchWalletData = async () => {
     try {
-      const response = await apiRequest('GET', '/wallets/my-wallet/');
-      console.log('Wallet Response:', response);
-      
+      const response = await apiRequest("GET", "/wallets/my-wallet/");
+      console.log("Wallet Response:", response);
+
       if (response.success && response.data) {
-        setWallet(response.data)
+        setWallet(response.data);
       }
     } catch (error) {
       throw error;
@@ -54,9 +54,9 @@ export default function HomeComponent() {
 
   const fetchLoanEligibility = async () => {
     try {
-      const response = await apiRequest('GET', '/loans/eligibility/');
-      console.log('Loan Eligibility Response:', response);
-      
+      const response = await apiRequest("GET", "/loans/eligibility/");
+      console.log("Loan Eligibility Response: ***", response);
+
       if (response.success && response.data) {
         setLoanEligibility(response.data);
       }
@@ -71,13 +71,10 @@ export default function HomeComponent() {
         setLoading(true);
       }
       setError(null);
-      
-      await Promise.all([
-        fetchWalletData(),
-        fetchLoanEligibility()
-      ]);
+
+      await Promise.all([fetchWalletData(), fetchLoanEligibility()]);
     } catch (error) {
-      setError('Failed to fetch data');
+      setError("Failed to fetch data");
     } finally {
       if (isRefreshing) {
         setRefreshing(false);
@@ -98,17 +95,17 @@ export default function HomeComponent() {
 
   const handleWithdrawPress = () => {
     setShowWithdrawModal(true);
-  }; 
+  };
 
   const handleLoanPress = () => {
     if (loanEligibility?.eligible) {
       setShowLoanModal(true);
-      setLoanAmount(''); // Reset loan amount
+      setLoanAmount(""); // Reset loan amount
     } else {
       Alert.alert(
-        t('loanNotAvailable', 'Loan Not Available'),
-        loanEligibility?.reason || t('notEligible', 'Not eligible for loan'),
-        [{ text: t('ok', 'OK') }]
+        t("loanNotAvailable", "Loan Not Available"),
+        loanEligibility?.reason || t("notEligible", "Not eligible for loan"),
+        [{ text: t("ok", "OK") }]
       );
     }
   };
@@ -116,71 +113,79 @@ export default function HomeComponent() {
   const handleLoanRequest = async () => {
     const amount = parseFloat(loanAmount);
     const maxAmount = parseFloat(loanEligibility?.max_loan_amount || 0);
-
+    console.log("loan eligibility", loanEligibility);
     // Validation
     if (!loanAmount || amount <= 0) {
       Alert.alert(
-        t('invalidAmount', 'Invalid Amount'),
-        t('pleaseEnterValidAmount', 'Please enter a valid amount'),
-        [{ text: t('ok', 'OK') }]
+        t("invalidAmount", "Invalid Amount"),
+        t("pleaseEnterValidAmount", "Please enter a valid amount"),
+        [{ text: t("ok", "OK") }]
       );
       return;
     }
 
     if (amount > maxAmount) {
       Alert.alert(
-        t('amountTooHigh', 'Amount Too High'),
-        t('maxLoanAmount', `Maximum loan amount is ${formatCurrency(maxAmount)}`),
-        [{ text: t('ok', 'OK') }]
+        t("amountTooHigh", "Amount Too High"),
+        t(
+          "maxLoanAmount",
+          `Maximum loan amount is ${formatCurrency(maxAmount)}`
+        ),
+        [{ text: t("ok", "OK") }]
       );
       return;
     }
 
     if (!loanEligibility?.site_id) {
       Alert.alert(
-        t('error', 'Error'),
-        t('siteNotFound', 'Site information not found'),
-        [{ text: t('ok', 'OK') }]
+        t("error", "Error"),
+        t("siteNotFound", "Site information not found"),
+        [{ text: t("ok", "OK") }]
       );
       return;
     }
 
     try {
       setLoanLoading(true);
-      
-      const response = await apiRequest('POST', '/loans/request/', {
+
+      const response = await apiRequest("POST", "/loans/request/", {
         amount_requested: loanAmount,
-        site_id: loanEligibility.site_id
+        site_id: loanEligibility.site_id,
       });
 
       if (response.success) {
         Alert.alert(
-          t('loanRequestSuccess', 'Loan Request Submitted'),
-          t('loanRequestSuccessMessage', 'Your loan request has been submitted successfully and is pending approval.'),
+          t("loanRequestSuccess", "Loan Request Submitted"),
+          t(
+            "loanRequestSuccessMessage",
+            "Your loan request has been submitted successfully and is pending approval."
+          ),
           [
-            { 
-              text: t('ok', 'OK'), 
+            {
+              text: t("ok", "OK"),
               onPress: () => {
                 setShowLoanModal(false);
-                setLoanAmount('');
+                setLoanAmount("");
                 // Refresh data to get updated loan eligibility
                 fetchData();
-              }
-            }
+              },
+            },
           ]
         );
       } else {
         Alert.alert(
-          t('error', 'Error'),
-          response.error?.message || response.error || t('loanRequestFailed', 'Failed to submit loan request'),
-          [{ text: t('ok', 'OK') }]
+          t("error", "Error"),
+          response.error?.message ||
+            response.error ||
+            t("loanRequestFailed", "Failed to submit loan request"),
+          [{ text: t("ok", "OK") }]
         );
       }
     } catch (error) {
       Alert.alert(
-        t('error', 'Error'),
-        t('loanRequestFailed', 'Failed to submit loan request'),
-        [{ text: t('ok', 'OK') }]
+        t("error", "Error"),
+        t("loanRequestFailed", "Failed to submit loan request"),
+        [{ text: t("ok", "OK") }]
       );
     } finally {
       setLoanLoading(false);
@@ -189,43 +194,55 @@ export default function HomeComponent() {
 
   const handleWithMPesa = () => {
     setShowWithdrawModal(false);
-    router.push('/withdraw-mpesa');
+    router.push("/withdraw-mpesa");
   };
 
   const handleWithoutMPesa = () => {
     setShowWithdrawModal(false);
-    router.push('/withdraw-without-mpesa');
+    router.push("/withdraw-without-mpesa");
   };
 
   // Get balance values with fallbacks
   const currentBalance = wallet ? parseFloat(wallet?.balance || 0) : 0;
-  const accruedBalance = wallet ? parseFloat(wallet?.all_time_accrued_balance || 0) : 0;
-  const pendingBalance = wallet ? parseFloat(wallet?.pending_accrued_balance || 0) : 0;
-  const maxLoanAmount = loanEligibility ? parseFloat(loanEligibility?.max_loan_amount || 0) : 0;
+  const accruedBalance = wallet
+    ? parseFloat(wallet?.all_time_accrued_balance || 0)
+    : 0;
+  const pendingBalance = wallet
+    ? parseFloat(wallet?.expected_accrual_amount || 0)
+    : 0;
+  const maxLoanAmount = loanEligibility
+    ? parseFloat(loanEligibility?.max_loan_amount || 0)
+    : 0;
 
   return (
     <View className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor="white" />
-      
+
       {/* Header */}
       <View className="bg-white px-4 pt-12 pb-4 flex-row justify-between items-center">
         <Text className="text-xl font-semibold text-center flex-1">
-          {t('appTitle')}
+          {t("appTitle")}
         </Text>
       </View>
 
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <Text className="text-gray-500 text-base">{t('loading', 'Loading...')}</Text>
+          <Text className="text-gray-500 text-base">
+            {t("loading", "Loading...")}
+          </Text>
         </View>
       ) : error ? (
         <View className="flex-1 justify-center items-center px-4">
-          <Text className="text-red-500 text-base text-center mb-4">{error}</Text>
-          <TouchableOpacity 
+          <Text className="text-red-500 text-base text-center mb-4">
+            {error}
+          </Text>
+          <TouchableOpacity
             className="bg-green-500 py-3 px-6 rounded-lg"
             onPress={fetchData}
           >
-            <Text className="text-white font-medium">{t('retry', 'Retry')}</Text>
+            <Text className="text-white font-medium">
+              {t("retry", "Retry")}
+            </Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -237,7 +254,7 @@ export default function HomeComponent() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#4CAF50']}
+              colors={["#4CAF50"]}
               tintColor="#4CAF50"
             />
           }
@@ -246,8 +263,8 @@ export default function HomeComponent() {
           <View className="w-full overflow-hidden">
             {/* Hero Image with Overlay */}
             <View className="relative w-full h-24 mb-4 mx-4 overflow-hidden">
-              <Image 
-                source={require('../../assets/images/transactions.jpg')}
+              <Image
+                source={require("../../assets/images/transactions.jpg")}
                 className="w-full h-full object-cover"
                 resizeMode="cover"
               />
@@ -259,19 +276,21 @@ export default function HomeComponent() {
                 {formatCurrency(currentBalance)}
               </Text>
               <Text className="text-green-600 text-sm mb-4 text-center">
-                {t('withdrawableBalance')}
+                {t("withdrawableBalance")}
               </Text>
             </View>
 
             {/* Withdraw Button */}
             <View className="">
-              <TouchableOpacity 
-                className={`rounded-full py-4 ${currentBalance > 0 ? 'bg-green-500' : 'bg-gray-400'}`}
+              <TouchableOpacity
+                className={`rounded-full py-4 ${
+                  currentBalance > 0 ? "bg-green-500" : "bg-gray-400"
+                }`}
                 onPress={currentBalance > 0 ? handleWithdrawPress : null}
                 disabled={currentBalance <= 0}
               >
                 <Text className="text-white text-center text-base font-semibold">
-                  {t('withdrawCash')}
+                  {t("withdrawCash")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -285,7 +304,7 @@ export default function HomeComponent() {
                   {formatCurrency(accruedBalance)}
                 </Text>
                 <Text className="text-gray-500 text-sm">
-                  {t('accruedWages')}
+                  {t("accruedWages")}
                 </Text>
               </View>
               <View className="bg-orange-200 rounded-xl w-16 h-16 justify-center items-center">
@@ -296,13 +315,13 @@ export default function HomeComponent() {
 
           {/* Pending Accrued Balance Card */}
           <View className="py-6">
-            <View className="flex-row justify-between items-center"> 
+            <View className="flex-row justify-between items-center">
               <View className="flex-1">
                 <Text className="text-xl font-bold text-black mb-1">
                   {formatCurrency(pendingBalance)}
                 </Text>
                 <Text className="text-gray-500 text-sm">
-                  {t('pendingAccrued', 'Pending Accrued')}
+                  {t("pendingAccrued", "Pending Accrued")}
                 </Text>
               </View>
               <View className="bg-blue-200 rounded-xl w-16 h-16 justify-center items-center">
@@ -312,11 +331,11 @@ export default function HomeComponent() {
           </View>
 
           {/* Loan Eligibility Card */}
-          <TouchableOpacity 
+          <TouchableOpacity
             className={`py-6 px-4 rounded-lg border-2 ${
-              loanEligibility?.eligible 
-                ? 'bg-purple-50 border-purple-200 border-dashed' 
-                : 'bg-gray-50 border-gray-200'
+              loanEligibility?.eligible
+                ? "bg-purple-50 border-purple-200 border-dashed"
+                : "bg-gray-50 border-gray-200"
             }`}
             onPress={handleLoanPress}
             disabled={!loanEligibility?.eligible}
@@ -325,44 +344,50 @@ export default function HomeComponent() {
             <View className="flex-row justify-between items-center">
               <View className="flex-1 space-y-4">
                 <Text className="text-xl font-bold text-black mb-1">
-                  {loanEligibility?.eligible ? formatCurrency(maxLoanAmount) : formatCurrency(0)}
+                  {loanEligibility?.eligible
+                    ? formatCurrency(maxLoanAmount)
+                    : formatCurrency(0)}
                 </Text>
-                <Text className={`text-sm mb-2 ${
-                  loanEligibility?.eligible ? 'text-purple-600' : 'text-gray-500'
-                }`}>
-                  {t('loanEligible', 'Loan Available')}
+                <Text
+                  className={`text-sm mb-2 ${
+                    loanEligibility?.eligible
+                      ? "text-purple-600"
+                      : "text-gray-500"
+                  }`}
+                >
+                  {t("loanEligible", "Loan Available")}
                 </Text>
 
                 {loanEligibility?.site_name && (
                   <Text className="text-xs text-gray-400 mt-1">
-                    {t('site', 'Site')}: {loanEligibility.site_name}
+                    {t("site", "Site")}: {loanEligibility.site_name}
                   </Text>
                 )}
                 {loanEligibility?.interest_rate && (
                   <Text className="text-xs text-gray-400">
-                    {t('interestRate', 'Interest')}: {loanEligibility.interest_rate}%
+                    {t("interestRate", "Interest")}:{" "}
+                    {loanEligibility.interest_rate}%
                   </Text>
                 )}
-                    {loanEligibility && !loanEligibility.eligible && (
-                      <Text className="text-sm text-red-500 mt-2">
-                        {loanEligibility.reason || t('notEligible', 'Not eligible for loan')}
-                      </Text>
-                    )}
-                    {loanEligibility?.outstanding_loan_balance > 0 && (
-                      <Text className="text-sm text-orange-600 mt-2">
-                        {t('outstandingLoan', 'Outstanding')}: {formatCurrency(loanEligibility.outstanding_loan_balance)}
-                      </Text>
-                   )}
+                {loanEligibility && !loanEligibility.eligible && (
+                  <Text className="text-sm text-red-500 mt-2">
+                    {loanEligibility.reason ||
+                      t("notEligible", "Not eligible for loan")}
+                  </Text>
+                )}
+                {loanEligibility?.outstanding_loan_balance > 0 && (
+                  <Text className="text-sm text-orange-600 mt-2">
+                    {t("outstandingLoan", "Outstanding")}:{" "}
+                    {formatCurrency(loanEligibility.outstanding_loan_balance)}
+                  </Text>
+                )}
                 {loanEligibility?.eligible && (
                   <View className="bg-purple-700 self-start px-3 py-4 rounded-full w-full mt-2">
                     <Text className="text-purple-100  text-center font-medium">
-                      {t('tapToRequest', 'Tap to request loan')}
+                      {t("tapToRequest", "Tap to request loan")}
                     </Text>
                   </View>
                 )}
-
-
-                
               </View>
               {/* <View className={`rounded-xl w-16 h-16 justify-center items-center ${
                 loanEligibility?.eligible ? 'bg-purple-200' : 'bg-gray-200'
@@ -377,7 +402,6 @@ export default function HomeComponent() {
                 )}
               </View> */}
             </View>
-
           </TouchableOpacity>
 
           {/* User Info Card */}
@@ -415,7 +439,7 @@ export default function HomeComponent() {
         visible={showWithdrawModal}
         onRequestClose={() => setShowWithdrawModal(false)}
       >
-        <Pressable 
+        <Pressable
           className="flex-1 bg-black/50 justify-center items-center"
           onPress={() => setShowWithdrawModal(false)}
         >
@@ -423,14 +447,14 @@ export default function HomeComponent() {
             {/* Modal Header */}
             <View className="px-6 py-4 border-b border-gray-100">
               <View className="flex-row items-center">
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => setShowWithdrawModal(false)}
                   className="mr-4"
                 >
                   <Text className="text-xl">←</Text>
                 </TouchableOpacity>
                 <Text className="text-lg font-semibold flex-1 text-center mr-8">
-                  {t('withdraw')}
+                  {t("withdraw")}
                 </Text>
               </View>
             </View>
@@ -438,7 +462,7 @@ export default function HomeComponent() {
             {/* Current Balance Display */}
             <View className="px-6 py-4 bg-gray-50 border-b border-gray-100">
               <Text className="text-5xl text-gray-600 text-center">
-                {t('availableBalance', 'Available Balance')}sddsd
+                {t("availableBalance", "Available Balance")}sddsd
               </Text>
               <Text className="text-xl font-bold text-center text-green-600">
                 {formatCurrency(currentBalance)}
@@ -446,17 +470,17 @@ export default function HomeComponent() {
             </View>
 
             {/* With MPesa Option */}
-            <TouchableOpacity 
+            <TouchableOpacity
               className="px-4 py-4 border-b border-gray-100"
               onPress={handleWithMPesa}
             >
               <View className="flex-row justify-between items-center">
                 <View className="flex-1">
                   <Text className="text-base font-semibold text-black mb-1">
-                    {t('withMPesa')}
+                    {t("withMPesa")}
                   </Text>
                   <Text className="text-sm text-gray-500">
-                    {t('withMPesaDescription')}
+                    {t("withMPesaDescription")}
                   </Text>
                 </View>
                 <View className="bg-green-100 rounded p-2 ml-4">
@@ -466,17 +490,17 @@ export default function HomeComponent() {
             </TouchableOpacity>
 
             {/* Without MPesa Option */}
-            <TouchableOpacity 
+            <TouchableOpacity
               className="px-4 py-4"
               onPress={handleWithoutMPesa}
             >
               <View className="flex-row justify-between items-center">
                 <View className="flex-1">
                   <Text className="text-base font-semibold text-black mb-1">
-                    {t('withoutMPesa')}
+                    {t("withoutMPesa")}
                   </Text>
                   <Text className="text-sm text-gray-500">
-                    {t('withoutMPesaDescription')}
+                    {t("withoutMPesaDescription")}
                   </Text>
                 </View>
                 <View className="bg-gray-100 rounded p-2 ml-4">
@@ -497,7 +521,7 @@ export default function HomeComponent() {
         visible={showLoanModal}
         onRequestClose={() => setShowLoanModal(false)}
       >
-        <Pressable 
+        <Pressable
           className="flex-1 bg-black/50 justify-center items-center"
           onPress={() => setShowLoanModal(false)}
         >
@@ -505,14 +529,14 @@ export default function HomeComponent() {
             {/* Modal Header */}
             <View className="px-6 py-4 border-b border-gray-100">
               <View className="flex-row items-center">
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => setShowLoanModal(false)}
                   className="mr-4"
                 >
                   <Text className="text-xl">←</Text>
                 </TouchableOpacity>
                 <Text className="text-lg font-semibold flex-1 text-center mr-8">
-                  {t('requestLoan', 'Request Loan')}
+                  {t("requestLoan", "Request Loan")}
                 </Text>
               </View>
             </View>
@@ -520,19 +544,20 @@ export default function HomeComponent() {
             {/* Loan Info */}
             <View className="px-6 py-4 bg-gray-50 border-b border-gray-100">
               <Text className="text-sm text-gray-600 text-center mb-2">
-                {t('maxLoanAvailable', 'Maximum Loan Available')}
+                {t("maxLoanAvailable", "Maximum Loan Available")}
               </Text>
               <Text className="text-xl font-bold text-center text-purple-600 mb-2">
                 {formatCurrency(maxLoanAmount)}
               </Text>
               {loanEligibility?.site_name && (
                 <Text className="text-xs text-gray-500 text-center">
-                  {t('site', 'Site')}: {loanEligibility.site_name}
+                  {t("site", "Site")}: {loanEligibility.site_name}
                 </Text>
               )}
               {loanEligibility?.interest_rate && (
                 <Text className="text-xs text-gray-500 text-center">
-                  {t('interestRate', 'Interest Rate')}: {loanEligibility.interest_rate}%
+                  {t("interestRate", "Interest Rate")}:{" "}
+                  {loanEligibility.interest_rate}%
                 </Text>
               )}
             </View>
@@ -540,11 +565,11 @@ export default function HomeComponent() {
             {/* Amount Input */}
             <View className="px-6 py-4">
               <Text className="text-sm text-gray-600 mb-2">
-                {t('enterLoanAmount', 'Enter loan amount')}
+                {t("enterLoanAmount", "Enter loan amount")}
               </Text>
               <TextInput
                 className="border border-gray-300 rounded-lg px-4 py-3 text-base"
-                placeholder={t('amountPlaceholder', 'e.g. 1000')}
+                placeholder={t("amountPlaceholder", "e.g. 1000")}
                 value={loanAmount}
                 onChangeText={setLoanAmount}
                 keyboardType="numeric"
@@ -554,24 +579,26 @@ export default function HomeComponent() {
 
             {/* Action Buttons */}
             <View className="flex-row px-6 py-4 space-x-3">
-              <TouchableOpacity 
+              <TouchableOpacity
                 className="flex-1 bg-gray-200 py-3 rounded-lg mr-2"
                 onPress={() => setShowLoanModal(false)}
                 disabled={loanLoading}
               >
                 <Text className="text-gray-700 text-center font-medium">
-                  {t('cancel', 'Cancel')}
+                  {t("cancel", "Cancel")}
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 className={`flex-1 py-3 rounded-lg ml-2 ${
-                  loanLoading ? 'bg-gray-400' : 'bg-purple-600'
+                  loanLoading ? "bg-gray-400" : "bg-purple-600"
                 }`}
                 onPress={handleLoanRequest}
                 disabled={loanLoading}
               >
                 <Text className="text-white text-center font-medium">
-                  {loanLoading ? t('submitting', 'Submitting...') : t('submit', 'Submit')}
+                  {loanLoading
+                    ? t("submitting", "Submitting...")
+                    : t("submit", "Submit")}
                 </Text>
               </TouchableOpacity>
             </View>

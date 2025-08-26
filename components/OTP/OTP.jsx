@@ -1,6 +1,8 @@
 // components/Password/Password.jsx
-import React, { useRef, useState } from "react";
+import { useRouter } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   KeyboardAvoidingView,
@@ -10,48 +12,109 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-  ActivityIndicator
+  View
 } from "react-native";
-import { useRouter } from "expo-router";
-import { useTranslation } from '../../hooks/useTranslation';
-import { useUserStore } from '../../store/userStore';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTranslation } from '../../hooks/useTranslation';
 import { apiRequest, apiRequestNoAuth } from '../../services/api';
+import { useUserStore } from '../../store/userStore';
 import translations from './translations.json';
 
 export default function OTPComponent() {
   const router = useRouter();
   const { t } = useTranslation(translations);
-  
+
   // Zustand store
-  const { 
-    phoneNumber, 
-    setTokens, 
-    setUser, 
-    setLoading, 
-    setError, 
+  const {
+    phoneNumber,
+    setTokens,
+    setUser,
+    setLoading,
+    setError,
     clearError,
     isLoading,
-    error 
+    error
   } = useUserStore();
 
   // Auth context
   const { updateUser, switchUserType } = useAuth();
-  
-  const [pin, setPin] = useState("");
+
+  // PIN state - 4 separate inputs
+  const [pin, setPin] = useState(['', '', '', '']);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const inputRefs = useRef([]);
   const scrollViewRef = useRef();
 
-  const handlePinChange = (text) => {
-    // Only allow numeric input and limit to 6 characters
+  // Initialize refs
+  useEffect(() => {
+    inputRefs.current = inputRefs.current.slice(0, 4);
+  }, []);
+
+  // Focus first input on mount
+  useEffect(() => {
+    setTimeout(() => {
+      inputRefs.current[0]?.focus();
+    }, 100);
+  }, []);
+
+  const handlePinChange = (text, index) => {
+    // Only allow single numeric digit
     const numericText = text.replace(/[^0-9]/g, '');
-    if (numericText.length <= 6) {
-      setPin(numericText);
-      clearError(); // Clear error when user starts typing
+
+    if (numericText.length > 1) {
+      // If multiple digits pasted, distribute them across boxes
+      const digits = numericText.slice(0, 4).split('');
+      const newPin = [...pin];
+
+      for (let i = 0; i < digits.length && (index + i) < 4; i++) {
+        newPin[index + i] = digits[i];
+      }
+
+      setPin(newPin);
+
+      // Focus the next empty box or last box
+      const nextIndex = Math.min(index + digits.length, 3);
+      setCurrentIndex(nextIndex);
+      inputRefs.current[nextIndex]?.focus();
+
+    } else {
+      // Single digit entry
+      const newPin = [...pin];
+      newPin[index] = numericText;
+      setPin(newPin);
+
+      // Auto-advance to next input
+      if (numericText && index < 3) {
+        const nextIndex = index + 1;
+        setCurrentIndex(nextIndex);
+        inputRefs.current[nextIndex]?.focus();
+      }
+    }
+
+    clearError(); // Clear error when user starts typing
+  };
+
+  const handleKeyPress = (e, index) => {
+    if (e.nativeEvent.key === 'Backspace') {
+      if (!pin[index] && index > 0) {
+        // If current box is empty and backspace pressed, go to previous box
+        const prevIndex = index - 1;
+        const newPin = [...pin];
+        newPin[prevIndex] = '';
+        setPin(newPin);
+        setCurrentIndex(prevIndex);
+        inputRefs.current[prevIndex]?.focus();
+      } else if (pin[index]) {
+        // Clear current box
+        const newPin = [...pin];
+        newPin[index] = '';
+        setPin(newPin);
+      }
     }
   };
 
-  const handleInputFocus = () => {
+  const handleInputFocus = (index) => {
+    setCurrentIndex(index);
     setTimeout(() => {
       scrollViewRef.current?.scrollTo({
         y: 200,
@@ -60,8 +123,18 @@ export default function OTPComponent() {
     }, 100);
   };
 
+  const getPinString = () => {
+    return pin.join('');
+  };
+
+  const isPinComplete = () => {
+    return pin.every(digit => digit !== '') && pin.length === 4;
+  };
+
   const handleLogin = async () => {
-    if (pin.length !== 6) {
+    const pinString = getPinString();
+
+    if (pinString.length !== 4) {
       Alert.alert(
         t('validationError'),
         t('pinRequired'),
@@ -74,8 +147,8 @@ export default function OTPComponent() {
       Alert.alert(
         t('error'),
         t('phoneNumberMissing'),
-        [{ 
-          text: t('goBack'), 
+        [{
+          text: t('goBack'),
           onPress: () => router.back()
         }]
       );
@@ -89,7 +162,7 @@ export default function OTPComponent() {
       // Step 1: Login to get tokens
       const loginResponse = await apiRequestNoAuth('POST', 'users/token/', {
         phone_number: phoneNumber.replace(/^\+\d{1,4}/, ''), // Remove country code if present
-        password: pin
+        password: pinString
       });
 
       if (!loginResponse.success) {
@@ -97,7 +170,7 @@ export default function OTPComponent() {
       }
 
       const { access, refresh } = loginResponse.data;
-      
+
       // Store tokens in the store
       setTokens(access, refresh);
 
@@ -113,7 +186,7 @@ export default function OTPComponent() {
 
       // Update AuthContext with user details
       const userData = userResponse.data;
-      
+
       console.log('Backend user_type:', userData.user_type);
       console.log('User data from API:', userData);
 
@@ -121,8 +194,8 @@ export default function OTPComponent() {
         id: userData.id,
         name: `${userData.first_name} ${userData.last_name}`.trim(),
         email: userData.email || `${userData.username}@company.com`, // Fallback email if none provided
-        role: userData.user_type === 'WageWorker' ? 'Construction Worker' 
-            : userData.user_type === 'SiteManager' ? 'Site Manager'
+        role: userData.user_type === 'WageWorker' ? 'Construction Worker'
+          : userData.user_type === 'SiteManager' ? 'Site Manager'
             : 'System Administrator'
       });
 
@@ -132,12 +205,12 @@ export default function OTPComponent() {
 
       // Navigate to main app
       router.replace("/(tabs)");
-      
+
     } catch (error) {
       console.error('Login error:', error);
-      
+
       let errorMessage = t('loginFailed');
-      
+
       if (error.message.includes('Invalid credentials')) {
         errorMessage = t('invalidCredentials');
       } else if (error.message.includes('User not found')) {
@@ -147,7 +220,7 @@ export default function OTPComponent() {
       }
 
       setError(errorMessage);
-      
+
       Alert.alert(
         t('loginError'),
         errorMessage,
@@ -160,18 +233,19 @@ export default function OTPComponent() {
 
   const handleBack = () => {
     // Clear PIN when going back
-    setPin("");
+    setPin(['', '', '', '']);
+    setCurrentIndex(0);
     clearError();
     router.back();
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: 'white' }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <StatusBar barStyle="dark-content" backgroundColor="white" />
-      
+
       {/* Header */}
       <View className="px-4 pt-12 pb-4 flex-row items-center border-b border-app-border">
         <TouchableOpacity onPress={handleBack} className="mr-4">
@@ -185,16 +259,16 @@ export default function OTPComponent() {
       <ScrollView
         ref={scrollViewRef}
         className="flex-1 px-6"
-        contentContainerStyle={{ 
+        contentContainerStyle={{
           flexGrow: 1,
-          paddingBottom: 50 
+          paddingBottom: 50
         }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         {/* Hero Image */}
         <View className="items-center py-6">
-          <Image 
+          <Image
             source={require('../../assets/images/login.jpg')}
             className="w-full h-56"
             resizeMode="contain"
@@ -222,57 +296,66 @@ export default function OTPComponent() {
             </View>
           )}
 
-          {/* PIN Input Field */}
+          {/* PIN Input - 4 Boxes */}
           <View className="mb-8">
-            <TextInput
-              className={`border rounded-lg px-4 py-4 text-center text-xl font-bold bg-app-background ${
-                pin.length > 0 ? 'border-app-primary' : 'border-app-border'
-              } ${error ? 'border-app-danger' : ''}`}
-              value={pin}
-              onChangeText={handlePinChange}
-              onFocus={handleInputFocus}
-              placeholder={t('pinPlaceholder')}
-              placeholderTextColor="#9CA3AF"
-              keyboardType="numeric"
-              maxLength={6}
-              secureTextEntry={true}
-              editable={!isLoading}
-              autoComplete="password"
-            />
-            {/* Character count indicator */}
-            <Text className="text-app-text-tertiary text-xs text-center mt-2">
-              {pin.length}/6 {t('digits')}
+            <View className="flex-row justify-center items-center mb-4" style={{ gap: 20 }}>
+              {pin.map((digit, index) => (
+                <View key={index} className="relative">
+                  <TextInput
+                    ref={(ref) => (inputRefs.current[index] = ref)}
+                    className={`w-20 h-20 border-2 rounded-xl text-center text-3xl font-bold bg-app-background ${currentIndex === index ? 'border-app-primary' :
+                      digit ? 'border-app-primary' : 'border-app-border'
+                      } ${error ? 'border-app-danger' : ''}`}
+                    value={digit}
+                    onChangeText={(text) => handlePinChange(text, index)}
+                    onKeyPress={(e) => handleKeyPress(e, index)}
+                    onFocus={() => handleInputFocus(index)}
+                    placeholder="•"
+                    placeholderTextColor="#9CA3AF"
+                    keyboardType="numeric"
+                    maxLength={1}
+                    secureTextEntry={true}
+                    editable={!isLoading}
+                    selectTextOnFocus={true}
+                    autoComplete="off"
+                    textContentType="oneTimeCode"
+                  />
+
+                  {/* Focus indicator */}
+                  {currentIndex === index && (
+                    <View className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-10 h-1 bg-app-primary rounded-full" />
+                  )}
+                </View>
+              ))}
+            </View>
+
+            {/* Progress indicator */}
+            <View className="flex-row justify-center items-center mb-2" style={{ gap: 8 }}>
+              {pin.map((digit, index) => (
+                <View
+                  key={index}
+                  className={`w-2 h-2 rounded-full ${digit ? 'bg-app-primary' : 'bg-app-border'
+                    }`}
+                />
+              ))}
+            </View>
+
+            <Text className="text-app-text-tertiary text-xs text-center">
+              {pin.filter(digit => digit).length}/4 {t('digits')}
             </Text>
           </View>
-
-          {/* Forgot Password */}
-          {/* <TouchableOpacity 
-            className="mb-8"
-            onPress={() => {
-              Alert.alert(
-                t('forgotPassword'),
-                t('contactSupport'),
-                [{ text: t('ok'), style: 'default' }]
-              );
-            }}
-          >
-            <Text className="text-center text-app-primary text-sm">
-              {t('forgotPassword')}
-            </Text>
-          </TouchableOpacity> */}
         </View>
 
         {/* Bottom Section */}
         <View className="mt-auto">
           {/* Login Button */}
           <TouchableOpacity
-            className={`rounded-full py-4 mb-4 flex-row justify-center items-center ${
-              pin.length === 6 && !isLoading 
-                ? 'bg-app-primary' 
-                : 'bg-app-text-tertiary'
-            }`}
+            className={`rounded-full py-4 mb-4 flex-row justify-center items-center ${isPinComplete() && !isLoading
+              ? 'bg-app-primary'
+              : 'bg-app-text-tertiary'
+              }`}
             onPress={handleLogin}
-            disabled={pin.length !== 6 || isLoading}
+            disabled={!isPinComplete() || isLoading}
           >
             {isLoading ? (
               <>
@@ -290,7 +373,7 @@ export default function OTPComponent() {
 
           {/* Help text */}
           <Text className="text-center text-app-text-secondary text-sm">
-            {t('pinHelpText')}
+            Enter your 4-digit PIN to continue
           </Text>
         </View>
       </ScrollView>

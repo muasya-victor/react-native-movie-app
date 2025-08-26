@@ -1,12 +1,13 @@
 // services/api.js
 import axios from "axios";
+import { useRouter } from "expo-router";
 import { useUserStore } from "../store/userStore";
+const router = useRouter();
 
 // Create an axios instance
 const api = axios.create({
-  // baseURL: "http://192.168.100.72:8000/api",
-  baseURL: "http://192.168.1.203:8000/api",
-  timeout: 10000,
+  baseURL: process.env.API_BASE_URL || "http://192.168.100.70:8000/api",
+  timeout: Number(process.env.API_TIMEOUT) || 10000,
 });
 
 // Function to get the current token from store
@@ -15,7 +16,7 @@ const getTokenFromStore = () => {
     const store = useUserStore.getState();
     return store.accessToken;
   } catch (error) {
-    console.warn('Could not access user store:', error);
+    console.warn("Could not access user store:", error);
     return null;
   }
 };
@@ -25,9 +26,9 @@ const refreshAccessToken = async () => {
   try {
     const store = useUserStore.getState();
     const refreshToken = store.refreshToken;
-    
+
     if (!refreshToken) {
-      throw new Error('No refresh token available');
+      throw new Error("No refresh token available");
     }
 
     const response = await axios.post(
@@ -37,31 +38,71 @@ const refreshAccessToken = async () => {
     );
 
     const { access } = response.data;
-    
+
     // Update the store with new access token
     store.setTokens(access, refreshToken);
-    
+
     return access;
   } catch (error) {
-    console.error('Token refresh failed:', error);
-    
+    console.error("Token refresh failed:", error);
+    router.replace("/login");
+
     // If refresh fails, logout user
     const store = useUserStore.getState();
     store.logout();
-    
+
     throw error;
   }
+};
+
+// Function to standardize error responses, especially for 500 and 404 errors
+const standardizeError = (error) => {
+  const status = error.response?.status || 500;
+
+  // For 500+ errors, return a standardized JSON error object
+  if (status >= 500) {
+    return {
+      error: "Internal Server Error",
+      message: "An unexpected server error occurred. Please try again later.",
+      status: status,
+      code: "SERVER_ERROR",
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  // For 404 errors, return a standardized JSON error object
+  if (status === 404) {
+    return {
+      error: "Not Found",
+      message:
+        "The requested resource was not found. Please check the URL and try again.",
+      status: status,
+      code: "NOT_FOUND",
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  // For other errors, return the original error data or a fallback
+  return (
+    error.response?.data || {
+      error: "Request Failed",
+      message: error.message || "An unknown error occurred",
+      status: status,
+      code: "REQUEST_ERROR",
+      timestamp: new Date().toISOString(),
+    }
+  );
 };
 
 // Request interceptor to add token
 api.interceptors.request.use(
   async (config) => {
     const token = getTokenFromStore();
-    
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -79,18 +120,17 @@ api.interceptors.response.use(
 
       try {
         const newToken = await refreshAccessToken();
-        
+
         // Retry the original request with new token
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
-        
       } catch (refreshError) {
-        console.error('Token refresh failed, redirecting to login');
-        
+        console.error("Token refresh failed, redirecting to login");
+
         // Handle logout/redirect logic here if needed
         // For React Native with Expo Router, you might want to:
         // router.replace('/login');
-        
+
         return Promise.reject(refreshError);
       }
     }
@@ -117,16 +157,24 @@ export async function apiRequest(method, endpoint, data = null, headers = {}) {
   } catch (error) {
     console.error(`API Request Error [${method} ${endpoint}]:`, error);
 
+    // Use standardized error for consistent error handling
+    const standardizedError = standardizeError(error);
+
     return {
       success: false,
-      error: error.response?.data || error.message,
-      status: error.response?.status || 500,
+      error: standardizedError,
+      status: standardizedError.status,
     };
   }
 }
 
 // Specific API functions that don't require authentication
-export async function apiRequestNoAuth(method, endpoint, data = null, headers = {}) {
+export async function apiRequestNoAuth(
+  method,
+  endpoint,
+  data = null,
+  headers = {}
+) {
   try {
     const response = await axios.request({
       method,
@@ -142,12 +190,18 @@ export async function apiRequestNoAuth(method, endpoint, data = null, headers = 
       status: response.status,
     };
   } catch (error) {
-    console.error(`API Request (No Auth) Error [${method} ${endpoint}]:`, error);
+    console.error(
+      `API Request (No Auth) Error [${method} ${endpoint}]:`,
+      error
+    );
+
+    // Use standardized error for consistent error handling
+    const standardizedError = standardizeError(error);
 
     return {
       success: false,
-      error: error.response?.data || error.message,
-      status: error.response?.status || 500,
+      error: standardizedError,
+      status: standardizedError.status,
     };
   }
 }
