@@ -1,6 +1,7 @@
-// components/OTP/OTP.jsx - Safe version with error handling
-import React, { useEffect, useRef, useState } from "react";
+// components/Password/Password.jsx
+import React, { useRef, useState } from "react";
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -9,82 +10,44 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
+  ActivityIndicator
 } from "react-native";
-
-// Import translations directly
+import { useRouter } from "expo-router";
+import { useTranslation } from '../../hooks/useTranslation';
+import { useUserStore } from '../../store/userStore';
+import { useAuth } from '../../contexts/AuthContext';
+import { apiRequest, apiRequestNoAuth } from '../../services/api';
 import translations from './translations.json';
 
-// Safe navigation hook
-const useSafeRouter = () => {
-  try {
-    const { useRouter } = require("expo-router");
-    return useRouter();
-  } catch (error) {
-    console.warn('Router not available:', error);
-    return {
-      back: () => console.log('Back navigation'),
-      replace: (path) => console.log('Navigate to:', path),
-      push: (path) => console.log('Push to:', path)
-    };
-  }
-};
-
-// Safe translation hook
-const useSafeTranslation = (componentTranslations) => {
-  try {
-    const { useTranslation } = require('../../hooks/useTranslation');
-    return useTranslation(componentTranslations);
-  } catch (error) {
-    console.warn('Translation context not available, using fallback');
-    
-    // Fallback translation function
-    const t = (key) => {
-      return componentTranslations?.en?.[key] || key;
-    };
-    
-    return {
-      t,
-      currentLanguage: 'en',
-      changeLanguage: () => {},
-      isLoading: false
-    };
-  }
-};
-
 export default function OTPComponent() {
-  const router = useSafeRouter();
-  const { t } = useSafeTranslation(translations);
+  const router = useRouter();
+  const { t } = useTranslation(translations);
   
-  const [code, setCode] = useState(["", "", "", ""]);
-  const [timeLeft, setTimeLeft] = useState(59);
-  const inputRefs = useRef([]);
+  // Zustand store
+  const { 
+    phoneNumber, 
+    setTokens, 
+    setUser, 
+    setLoading, 
+    setError, 
+    clearError,
+    isLoading,
+    error 
+  } = useUserStore();
+
+  // Auth context
+  const { updateUser, switchUserType } = useAuth();
+  
+  const [pin, setPin] = useState("");
   const scrollViewRef = useRef();
 
-
-  const user_role = 'wage_worker' // site_admin , site_manager
-
-  // Countdown timer
-  useEffect(() => {
-    if (timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [timeLeft]);
-
-  const handleCodeChange = (text, index) => {
-    const newCode = [...code];
-    newCode[index] = text;
-    setCode(newCode);
-
-    if (text && index < 3) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyPress = (e, index) => {
-    if (e.nativeEvent.key === "Backspace" && !code[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+  const handlePinChange = (text) => {
+    // Only allow numeric input and limit to 6 characters
+    const numericText = text.replace(/[^0-9]/g, '');
+    if (numericText.length <= 6) {
+      setPin(numericText);
+      clearError(); // Clear error when user starts typing
     }
   };
 
@@ -97,22 +60,109 @@ export default function OTPComponent() {
     }, 100);
   };
 
-  const handleVerify = () => {
-    const verificationCode = code.join("");
-    if (verificationCode.length === 4) {
-      console.log("Verification code:", verificationCode);
-      try {
-        router.replace("/(tabs)");
-      } catch (error) {
-        console.error('Navigation failed:', error);
+  const handleLogin = async () => {
+    if (pin.length !== 6) {
+      Alert.alert(
+        t('validationError'),
+        t('pinRequired'),
+        [{ text: t('ok'), style: 'default' }]
+      );
+      return;
+    }
+
+    if (!phoneNumber) {
+      Alert.alert(
+        t('error'),
+        t('phoneNumberMissing'),
+        [{ 
+          text: t('goBack'), 
+          onPress: () => router.back()
+        }]
+      );
+      return;
+    }
+
+    setLoading(true);
+    clearError();
+
+    try {
+      // Step 1: Login to get tokens
+      const loginResponse = await apiRequestNoAuth('POST', 'users/token/', {
+        phone_number: phoneNumber.replace(/^\+\d{1,4}/, ''), // Remove country code if present
+        password: pin
+      });
+
+      if (!loginResponse.success) {
+        throw new Error(loginResponse.error?.detail || t('loginFailed'));
       }
+
+      const { access, refresh } = loginResponse.data;
+      
+      // Store tokens in the store
+      setTokens(access, refresh);
+
+      // Step 2: Get current user data
+      const userResponse = await apiRequest('GET', 'users/users/get-current-user/');
+
+      if (!userResponse.success) {
+        throw new Error(userResponse.error?.detail || t('userDataFailed'));
+      }
+
+      // Store user data in userStore
+      setUser(userResponse.data);
+
+      // Update AuthContext with user details
+      const userData = userResponse.data;
+      
+      console.log('Backend user_type:', userData.user_type);
+      console.log('User data from API:', userData);
+
+      await updateUser({
+        id: userData.id,
+        name: `${userData.first_name} ${userData.last_name}`.trim(),
+        email: userData.email || `${userData.username}@company.com`, // Fallback email if none provided
+        role: userData.user_type === 'WageWorker' ? 'Construction Worker' 
+            : userData.user_type === 'SiteManager' ? 'Site Manager'
+            : 'System Administrator'
+      });
+
+      // Set user type in AuthContext
+      const switchResult = await switchUserType(userData.user_type);
+      console.log('SwitchUserType result:', switchResult);
+
+      // Navigate to main app
+      router.replace("/(tabs)");
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      
+      let errorMessage = t('loginFailed');
+      
+      if (error.message.includes('Invalid credentials')) {
+        errorMessage = t('invalidCredentials');
+      } else if (error.message.includes('User not found')) {
+        errorMessage = t('userNotFound');
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setError(errorMessage);
+      
+      Alert.alert(
+        t('loginError'),
+        errorMessage,
+        [{ text: t('ok'), style: 'default' }]
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleResend = () => {
-    setTimeLeft(59);
-    setCode(["", "", "", ""]);
-    console.log("Resending code...");
+  const handleBack = () => {
+    // Clear PIN when going back
+    setPin("");
+    clearError();
+    router.back();
   };
 
   return (
@@ -123,30 +173,18 @@ export default function OTPComponent() {
       <StatusBar barStyle="dark-content" backgroundColor="white" />
       
       {/* Header */}
-      <View style={{ 
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        paddingHorizontal: 16, 
-        paddingTop: 48, 
-        paddingBottom: 16 
-      }}>
-        <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 16 }}>
-          <Text style={{ fontSize: 24 }}>←</Text>
+      <View className="px-4 pt-12 pb-4 flex-row items-center border-b border-app-border">
+        <TouchableOpacity onPress={handleBack} className="mr-4">
+          <Text className="text-2xl text-app-text-primary">←</Text>
         </TouchableOpacity>
-        <Text style={{ 
-          fontSize: 20, 
-          fontWeight: '600', 
-          textAlign: 'center', 
-          flex: 1, 
-          marginRight: 32 
-        }}>
-          {t('verification')}
+        <Text className="text-xl font-semibold text-center flex-1 mr-8 text-app-text-primary">
+          {t('enterPassword')}
         </Text>
       </View>
 
       <ScrollView
         ref={scrollViewRef}
-        style={{ flex: 1, paddingHorizontal: 24 }}
+        className="flex-1 px-6"
         contentContainerStyle={{ 
           flexGrow: 1,
           paddingBottom: 50 
@@ -155,176 +193,105 @@ export default function OTPComponent() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Hero Image */}
-        <View style={{ alignItems: 'center', paddingVertical: 24 }}>
+        <View className="items-center py-6">
           <Image 
             source={require('../../assets/images/login.jpg')}
-            style={{ width: '100%', height: 224 }}
+            className="w-full h-56"
             resizeMode="contain"
           />
         </View>
 
         {/* Content Section */}
-        <View style={{ flex: 1 }}>
+        <View className="flex-1">
           {/* Title */}
-          <Text style={{ 
-            fontSize: 24, 
-            fontWeight: 'bold', 
-            color: 'black', 
-            marginBottom: 16, 
-            textAlign: 'center' 
-          }}>
-            {t('enterTheCode')}
+          <Text className="text-2xl font-bold text-app-text-primary mb-4 text-center">
+            {t('enterYourPin')}
           </Text>
 
-          {/* Subtitle */}
-          <Text style={{ 
-            color: '#6b7280', 
-            fontSize: 16, 
-            marginBottom: 32, 
-            textAlign: 'center' 
-          }}>
-            {t('verificationSent')}
+          {/* Phone number display */}
+          <Text className="text-app-text-secondary text-base mb-8 text-center">
+            {t('enterPinFor')} {phoneNumber}
           </Text>
 
-          {/* Code Input Fields */}
-          <View style={{ 
-            flexDirection: 'row', 
-            justifyContent: 'space-between', 
-            width: '100%', 
-            marginBottom: 32, 
-            paddingHorizontal: 8 
-          }}>
-            {code.map((digit, index) => (
-              <TextInput
-                key={index}
-                ref={(ref) => (inputRefs.current[index] = ref)}
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderWidth: 0.8,
-                  borderColor: digit ? '#10b981' : '#d1d5db',
-                  borderRadius: 8,
-                  textAlign: 'center',
-                  fontSize: 20,
-                  fontWeight: 'bold',
-                  backgroundColor: 'white',
+          {/* Error display */}
+          {error && (
+            <View className="mb-6 p-4 bg-app-danger-light rounded-lg">
+              <Text className="text-app-danger text-center text-sm">
+                {error}
+              </Text>
+            </View>
+          )}
 
-                }}
-                value={digit}
-                onChangeText={(text) => handleCodeChange(text, index)}
-                onKeyPress={(e) => handleKeyPress(e, index)}
-                onFocus={handleInputFocus}
-                keyboardType="numeric"
-                maxLength={1}
-                selectTextOnFocus
-              />
-            ))}
+          {/* PIN Input Field */}
+          <View className="mb-8">
+            <TextInput
+              className={`border rounded-lg px-4 py-4 text-center text-xl font-bold bg-app-background ${
+                pin.length > 0 ? 'border-app-primary' : 'border-app-border'
+              } ${error ? 'border-app-danger' : ''}`}
+              value={pin}
+              onChangeText={handlePinChange}
+              onFocus={handleInputFocus}
+              placeholder={t('pinPlaceholder')}
+              placeholderTextColor="#9CA3AF"
+              keyboardType="numeric"
+              maxLength={6}
+              secureTextEntry={true}
+              editable={!isLoading}
+              autoComplete="password"
+            />
+            {/* Character count indicator */}
+            <Text className="text-app-text-tertiary text-xs text-center mt-2">
+              {pin.length}/6 {t('digits')}
+            </Text>
           </View>
 
-          {/* Timer */}
-          <View style={{ 
-            flexDirection: 'row', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            marginBottom: 32 
-          }}>
-            <View style={{ alignItems: 'center', marginHorizontal: 12 }}>
-              <View style={{ 
-                backgroundColor: '#f3f4f6', 
-                paddingHorizontal: 16, 
-                paddingVertical: 12, 
-                borderRadius: 8, 
-                minWidth: 60 
-              }}>
-                <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center' }}>00</Text>
-              </View>
-              <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>
-                {t('hours')}
-              </Text>
-            </View>
-            
-            <Text style={{ color: '#9ca3af', fontSize: 20, marginHorizontal: 8 }}>:</Text>
-            
-            <View style={{ alignItems: 'center', marginHorizontal: 12 }}>
-              <View style={{ 
-                backgroundColor: '#f3f4f6', 
-                paddingHorizontal: 16, 
-                paddingVertical: 12, 
-                borderRadius: 8, 
-                minWidth: 60 
-              }}>
-                <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center' }}>00</Text>
-              </View>
-              <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>
-                {t('minutes')}
-              </Text>
-            </View>
-            
-            <Text style={{ color: '#9ca3af', fontSize: 20, marginHorizontal: 8 }}>:</Text>
-            
-            <View style={{ alignItems: 'center', marginHorizontal: 12 }}>
-              <View style={{ 
-                backgroundColor: '#fed7aa', 
-                paddingHorizontal: 16, 
-                paddingVertical: 12, 
-                borderRadius: 12, 
-                minWidth: 60 
-              }}>
-                <Text style={{ 
-                  fontSize: 20, 
-                  fontWeight: 'bold', 
-                  textAlign: 'center', 
-                  color: '#ea580c' 
-                }}>
-                  {timeLeft.toString().padStart(2, "0")}
-                </Text>
-              </View>
-              <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>
-                {t('seconds')}
-              </Text>
-            </View>
-          </View>
+          {/* Forgot Password */}
+          {/* <TouchableOpacity 
+            className="mb-8"
+            onPress={() => {
+              Alert.alert(
+                t('forgotPassword'),
+                t('contactSupport'),
+                [{ text: t('ok'), style: 'default' }]
+              );
+            }}
+          >
+            <Text className="text-center text-app-primary text-sm">
+              {t('forgotPassword')}
+            </Text>
+          </TouchableOpacity> */}
         </View>
 
         {/* Bottom Section */}
-        <View style={{ marginTop: 'auto' }}>
-          {/* Verify Button */}
+        <View className="mt-auto">
+          {/* Login Button */}
           <TouchableOpacity
-            style={{
-              backgroundColor: code.join("").length === 4 ? '#10b981' : '#d1d5db',
-              borderRadius: 50,
-              paddingVertical: 16,
-              marginBottom: 16,
-              shadowColor: code.join("").length === 4 ? '#10b981' : 'transparent',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
-            }}
-            onPress={handleVerify}
-            disabled={code.join("").length !== 4}
+            className={`rounded-full py-4 mb-4 flex-row justify-center items-center ${
+              pin.length === 6 && !isLoading 
+                ? 'bg-app-primary' 
+                : 'bg-app-text-tertiary'
+            }`}
+            onPress={handleLogin}
+            disabled={pin.length !== 6 || isLoading}
           >
-            <Text style={{ 
-              color: 'white', 
-              textAlign: 'center', 
-              fontSize: 14, 
-              fontWeight: '400' 
-            }}>
-              {t('verify')}
-            </Text>
+            {isLoading ? (
+              <>
+                <ActivityIndicator color="white" size="small" className="mr-2" />
+                <Text className="text-white text-center text-lg font-semibold">
+                  {t('loggingIn')}
+                </Text>
+              </>
+            ) : (
+              <Text className="text-white text-center text-lg font-semibold">
+                {t('login')}
+              </Text>
+            )}
           </TouchableOpacity>
 
-          {/* Resend Link */}
-          <TouchableOpacity onPress={handleResend} style={{ paddingVertical: 8 }}>
-            <Text style={{ 
-              textAlign: 'center', 
-              color: '#10b981', 
-              fontSize: 14, 
-              fontWeight: '400' 
-            }}>
-              {t('didntReceiveResend')}
-            </Text>
-          </TouchableOpacity>
+          {/* Help text */}
+          <Text className="text-center text-app-text-secondary text-sm">
+            {t('pinHelpText')}
+          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

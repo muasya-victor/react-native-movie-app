@@ -255,7 +255,7 @@ export default function HomeComponent() {
 
             {/* Balance Amount */}
             <View className="px-4">
-              <Text className="text-2xl font-bold text-black mb-1 text-center">
+              <Text className="text-5xl font-bold text-black mb-1 text-center">
                 {formatCurrency(currentBalance)}
               </Text>
               <Text className="text-green-600 text-sm mb-4 text-center">
@@ -278,7 +278,7 @@ export default function HomeComponent() {
           </View>
 
           {/* All Time Accrued Wages Card */}
-          <View className="py-6">
+          <View className="py-6 hidden">
             <View className="flex-row justify-between items-center">
               <View className="flex-1">
                 <Text className="text-xl font-bold text-black mb-1">
@@ -381,7 +381,7 @@ export default function HomeComponent() {
           </TouchableOpacity>
 
           {/* User Info Card */}
-          {wallet && wallet.user_name && (
+          {/* {wallet && wallet.user_name && (
             <View className="py-6 border-t border-gray-100">
               <View className="flex-row justify-between items-center">
                 <View className="flex-1">
@@ -404,7 +404,7 @@ export default function HomeComponent() {
                 </View>
               </View>
             </View>
-          )}
+          )} */}
         </ScrollView>
       )}
 
@@ -437,8 +437,8 @@ export default function HomeComponent() {
 
             {/* Current Balance Display */}
             <View className="px-6 py-4 bg-gray-50 border-b border-gray-100">
-              <Text className="text-sm text-gray-600 text-center">
-                {t('availableBalance', 'Available Balance')}
+              <Text className="text-5xl text-gray-600 text-center">
+                {t('availableBalance', 'Available Balance')}sddsd
               </Text>
               <Text className="text-xl font-bold text-center text-green-600">
                 {formatCurrency(currentBalance)}
