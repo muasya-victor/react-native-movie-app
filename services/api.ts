@@ -1,6 +1,8 @@
 // services/api.js
 import axios from "axios";
+import { useRouter } from "expo-router";
 import { useUserStore } from "../store/userStore";
+const router = useRouter();
 
 // Create an axios instance
 const api = axios.create({
@@ -43,6 +45,7 @@ const refreshAccessToken = async () => {
     return access;
   } catch (error) {
     console.error("Token refresh failed:", error);
+    router.replace("/login");
 
     // If refresh fails, logout user
     const store = useUserStore.getState();
@@ -50,6 +53,45 @@ const refreshAccessToken = async () => {
 
     throw error;
   }
+};
+
+// Function to standardize error responses, especially for 500 and 404 errors
+const standardizeError = (error) => {
+  const status = error.response?.status || 500;
+
+  // For 500+ errors, return a standardized JSON error object
+  if (status >= 500) {
+    return {
+      error: "Internal Server Error",
+      message: "An unexpected server error occurred. Please try again later.",
+      status: status,
+      code: "SERVER_ERROR",
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  // For 404 errors, return a standardized JSON error object
+  if (status === 404) {
+    return {
+      error: "Not Found",
+      message:
+        "The requested resource was not found. Please check the URL and try again.",
+      status: status,
+      code: "NOT_FOUND",
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  // For other errors, return the original error data or a fallback
+  return (
+    error.response?.data || {
+      error: "Request Failed",
+      message: error.message || "An unknown error occurred",
+      status: status,
+      code: "REQUEST_ERROR",
+      timestamp: new Date().toISOString(),
+    }
+  );
 };
 
 // Request interceptor to add token
@@ -115,10 +157,13 @@ export async function apiRequest(method, endpoint, data = null, headers = {}) {
   } catch (error) {
     console.error(`API Request Error [${method} ${endpoint}]:`, error);
 
+    // Use standardized error for consistent error handling
+    const standardizedError = standardizeError(error);
+
     return {
       success: false,
-      error: error.response?.data || error.message,
-      status: error.response?.status || 500,
+      error: standardizedError,
+      status: standardizedError.status,
     };
   }
 }
@@ -150,10 +195,13 @@ export async function apiRequestNoAuth(
       error
     );
 
+    // Use standardized error for consistent error handling
+    const standardizedError = standardizeError(error);
+
     return {
       success: false,
-      error: error.response?.data || error.message,
-      status: error.response?.status || 500,
+      error: standardizedError,
+      status: standardizedError.status,
     };
   }
 }

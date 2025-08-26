@@ -19,35 +19,35 @@ export default function TabsLayout() {
       {
         name: "index",
         title: "Home",
-        icon: "home-outline"
+        icon: "home-outline",
       },
     ];
     const profile: TabConfig[] = [
       {
         name: "profile",
         title: "Profile",
-        icon: "person-outline"
-      }
+        icon: "person-outline",
+      },
     ];
 
-    if (userType === 'SystemAdmin') {
+    if (userType === "SystemAdmin") {
       return [
         ...baseTabs,
         {
-          name: "menu", 
+          name: "menu",
           title: "Menu",
-          icon: "wine-outline"
+          icon: "wine-outline",
         },
         {
-          name: "settings", 
+          name: "settings",
           title: "Settings",
-          icon: "settings-outline"
+          icon: "settings-outline",
         },
-        ...profile
+        ...profile,
       ];
     }
 
-    if (userType === 'SiteManager') {
+    if (userType === "SiteManager") {
       return [
         ...baseTabs,
         // {
@@ -58,13 +58,13 @@ export default function TabsLayout() {
         {
           name: "payments",
           title: "Payments",
-          icon: "cash-outline"
+          icon: "cash-outline",
         },
-        {
-          name: "withdrawal-requests",
-          title: "Requests",
-          icon: "document-text-outline"
-        },
+        // {
+        //   name: "withdrawal-requests",
+        //   title: "Requests",
+        //   icon: "document-text-outline",
+        // },
         ...profile,
       ];
     }
@@ -73,27 +73,27 @@ export default function TabsLayout() {
     return [
       ...baseTabs,
       {
-        name: "transactions", 
+        name: "transactions",
         title: "Transactions",
-        icon: "cash-outline"
+        icon: "cash-outline",
       },
       ...profile,
     ];
   };
 
   // Get all possible tab names to determine which ones to hide
-  const visibleTabs = getTabsForUser().map(tab => tab.name);
-  
+  const visibleTabs = getTabsForUser().map((tab) => tab.name);
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: "#4CAF50",
         tabBarStyle: {
-          paddingTop: 10,    
+          paddingTop: 10,
         },
         tabBarLabelStyle: {
-          fontSize: 10,      
+          fontSize: 10,
         },
       }}
     >
@@ -110,7 +110,7 @@ export default function TabsLayout() {
           }}
         />
       ))}
-      
+
       {/* Hidden routes - these pages exist but aren't shown in tabs */}
       <Tabs.Screen name="withdraw-mpesa" options={{ href: null }} />
       <Tabs.Screen name="withdraw-without-mpesa" options={{ href: null }} />
@@ -120,7 +120,12 @@ export default function TabsLayout() {
       <Tabs.Screen name="worker-details" options={{ href: null }} />
       <Tabs.Screen name="place-order" options={{ href: null }} />
       <Tabs.Screen name="add-menu-item" options={{ href: null }} />
-      
+      <Tabs.Screen
+        name="disbursements/confirmation-page"
+        options={{ href: null }}
+      />
+      <Tabs.Screen name="disbursements/success-page" options={{ href: null }} />
+
       {!visibleTabs.includes("workers") && (
         <Tabs.Screen name="workers" options={{ href: null }} />
       )}

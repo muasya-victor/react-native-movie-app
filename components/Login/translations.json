@@ -2,7 +2,7 @@
   "en": {
     "appTitle": "WorkerApp",
     "enterPhoneNumber": "Enter your phone number to get started",
-    "phoneNumberPlaceholder": "+254712345678",
+    "phoneNumberPlaceholder": "712345678",
     "phoneNumberHint": "We'll send a verification code to this number",
     "phoneNumberRequired": "Phone number is required",
     "phoneNumberInvalid": "Please enter a valid phone number",
@@ -17,7 +17,7 @@
   "sw": {
     "appTitle": "Programu ya Mfanyakazi",
     "enterPhoneNumber": "Ingiza nambari yako ya simu ili uanze",
-    "phoneNumberPlaceholder": "+254712345678",
+    "phoneNumberPlaceholder": "712345678",
     "phoneNumberHint": "Tutatuma msimbo wa uhakiki kwenye nambari hii",
     "phoneNumberRequired": "Nambari ya simu inahitajika",
     "phoneNumberInvalid": "Tafadhali ingiza nambari sahihi ya simu",

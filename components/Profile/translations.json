@@ -1,6 +1,7 @@
 {
   "en": {
     "title": "Profile",
+    "viewAndEditProfile": "View and Edit Your Profile",
     "phoneNumber": "Phone Number",
     "language": "Language",
     "logout": "Logout",
@@ -21,7 +22,7 @@
     "kiswahili": "Kiswahili"
   },
   "sw": {
-    "title": "Profaili",
+    "viewAndEditProfile": "Tazama na Hariri Profaili Yako",
     "phoneNumber": "Nambari ya Simu",
     "language": "Lugha",
     "logout": "Toka",
