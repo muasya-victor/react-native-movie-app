@@ -155,6 +155,7 @@ export async function apiRequest(method, endpoint, data = null, headers = {}) {
       status: response.status,
     };
   } catch (error) {
+    console.log("Full error object:", error.config?.url);
     console.error(`API Request Error [${method} ${endpoint}]:`, error);
 
     // Use standardized error for consistent error handling
