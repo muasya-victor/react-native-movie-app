@@ -6,9 +6,11 @@ const router = useRouter();
 
 // Create an axios instance
 const api = axios.create({
-  baseURL: process.env.API_BASE_URL || "http://192.168.100.70:8000/api",
+  baseURL: process.env.API_BASE_URL || "http://167.86.92.49:8000/api",
   timeout: Number(process.env.API_TIMEOUT) || 10000,
 });
+
+console.log(api.defaults.baseURL);
 
 // Function to get the current token from store
 const getTokenFromStore = () => {
@@ -120,6 +122,9 @@ api.interceptors.response.use(
 
       try {
         const newToken = await refreshAccessToken();
+        
+        // console.log();
+        
 
         // Retry the original request with new token
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
