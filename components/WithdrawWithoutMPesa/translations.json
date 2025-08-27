@@ -11,12 +11,12 @@
   },
   "sw": {
     "withdraw": "Toa",
-    "siteManager": "Meneja wa Tovuti",
+    "siteManager": "Meneja wa Kituo",
     "amount": "Kiasi",
     "enterAmount": "Ingiza kiasi",
     "requestWithdrawal": "Omba Kutolewa",
     "withdrawalRequested": "Ombi la kutolewa limewasilishwa",
     "processing": "Inachakata ombi lako...",
-    "managerWillContact": "Meneja wako wa tovuti atawasiliana nawe hivi karibuni"
+    "managerWillContact": "Meneja wako wa kituo atawasiliana nawe hivi karibuni"
   }
 }

@@ -163,20 +163,25 @@ export default function OTPComponent() {
       const loginResponse = await apiRequestNoAuth('POST', 'users/token/', {
         phone_number: phoneNumber.replace(/^\+\d{1,4}/, ''), // Remove country code if present
         password: pinString
-      });
+      })
 
-      if (!loginResponse.success) {
+      console.log(loginResponse, 'res');
+
+
+      if (loginResponse.error) {
         throw new Error(loginResponse.error?.detail || t('loginFailed'));
       }
 
       const { access, refresh } = loginResponse.data;
 
-      // Store tokens in the store
+
+      // // Store tokens in the store
       setTokens(access, refresh);
 
-      // Step 2: Get current user data
+      // // Step 2: Get current user data
       const userResponse = await apiRequest('GET', 'users/users/get-current-user/');
 
+      console.log(userResponse);
       if (!userResponse.success) {
         throw new Error(userResponse.error?.detail || t('userDataFailed'));
       }

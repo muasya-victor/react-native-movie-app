@@ -60,11 +60,11 @@ export default function TabsLayout() {
           title: "Payments",
           icon: "cash-outline",
         },
-        // {
-        //   name: "withdrawal-requests",
-        //   title: "Requests",
-        //   icon: "document-text-outline",
-        // },
+        {
+          name: "withdrawal-requests",
+          title: "Requests",
+          icon: "document-text-outline",
+        },
         ...profile,
       ];
     }
@@ -76,6 +76,11 @@ export default function TabsLayout() {
         name: "transactions",
         title: "Transactions",
         icon: "cash-outline",
+      },
+      {
+        name: "withdrawal-requests",
+        title: "Requests",
+        icon: "document-text-outline",
       },
       ...profile,
     ];
@@ -135,9 +140,7 @@ export default function TabsLayout() {
       {!visibleTabs.includes("payments") && (
         <Tabs.Screen name="payments" options={{ href: null }} />
       )}
-      {!visibleTabs.includes("withdrawal-requests") && (
-        <Tabs.Screen name="withdrawal-requests" options={{ href: null }} />
-      )}
+
       {!visibleTabs.includes("sites") && (
         <Tabs.Screen name="sites" options={{ href: null }} />
       )}

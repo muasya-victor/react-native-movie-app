@@ -15,11 +15,15 @@ import {
   View,
 } from "react-native";
 import { useTranslation } from "../../hooks/useTranslation";
+import { useUserSite } from "../../hooks/useUserSite";
+import { SiteInfoCard } from "./SiteInfoCard";
 import translations from "./translations.json";
 
 export default function HomeComponent() {
   const router = useRouter();
   const { t, currentLanguage } = useTranslation(translations);
+  const { selectedSite, hasNoSiteAssigned } = useUserSite();
+
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showLoanModal, setShowLoanModal] = useState(false);
   const [loanAmount, setLoanAmount] = useState("");
@@ -94,10 +98,27 @@ export default function HomeComponent() {
   }, []);
 
   const handleWithdrawPress = () => {
+    if (hasNoSiteAssigned) {
+      Alert.alert(
+        t("siteRequired", "Site Assignment Required"),
+        t("siteRequiredForWithdraw", "You need to be assigned to a site to withdraw funds. Please contact your administrator."),
+        [{ text: t("ok", "OK") }]
+      );
+      return;
+    }
     setShowWithdrawModal(true);
   };
 
   const handleLoanPress = () => {
+    if (hasNoSiteAssigned) {
+      Alert.alert(
+        t("siteRequired", "Site Assignment Required"),
+        t("siteRequiredForLoan", "You need to be assigned to a site to request loans. Please contact your administrator."),
+        [{ text: t("ok", "OK") }]
+      );
+      return;
+    }
+
     if (loanEligibility?.eligible) {
       setShowLoanModal(true);
       setLoanAmount(""); // Reset loan amount
@@ -114,6 +135,7 @@ export default function HomeComponent() {
     const amount = parseFloat(loanAmount);
     const maxAmount = parseFloat(loanEligibility?.max_loan_amount || 0);
     console.log("loan eligibility", loanEligibility);
+
     // Validation
     if (!loanAmount || amount <= 0) {
       Alert.alert(
@@ -176,8 +198,8 @@ export default function HomeComponent() {
         Alert.alert(
           t("error", "Error"),
           response.error?.message ||
-            response.error ||
-            t("loanRequestFailed", "Failed to submit loan request"),
+          response.error ||
+          t("loanRequestFailed", "Failed to submit loan request"),
           [{ text: t("ok", "OK") }]
         );
       }
@@ -200,6 +222,24 @@ export default function HomeComponent() {
   const handleWithoutMPesa = () => {
     setShowWithdrawModal(false);
     router.push("/withdraw-without-mpesa");
+  };
+
+  const handleNoSiteAction = () => {
+    Alert.alert(
+      t("contactAdministrator", "Contact Administrator"),
+      t("contactAdminMessage", "Please reach out to your system administrator to be assigned to a work site. This is required for most app functions including withdrawals and loan requests."),
+      [
+        { text: t("cancel", "Cancel") },
+        {
+          text: t("contactSupport", "Contact Support"),
+          onPress: () => {
+            // You can implement support contact logic here
+            // For example, open email app or phone dialer
+            console.log("Contact support pressed");
+          }
+        }
+      ]
+    );
   };
 
   // Get balance values with fallbacks
@@ -259,6 +299,21 @@ export default function HomeComponent() {
             />
           }
         >
+          {/* Site Information Card */}
+          <SiteInfoCard
+            onNoSiteAction={handleNoSiteAction}
+            translations={{
+              currentSite: t("currentSite", "Current Site"),
+              noSiteAssigned: t("noSiteAssigned", "No Site Assigned"),
+              contactAdmin: t("contactAdminForSite", "Please contact your administrator to assign you to a site. Some functions may not work without site assignment."),
+              retryFetchSite: t("retryFetchSite", "Retry Fetch Site"),
+              siteFunctions: t("siteFunctionsWarning", "Some functions require site assignment"),
+              loading: t("loadingSite", "Loading site information..."),
+              error: t("errorLoadingSite", "Error loading site"),
+              retry: t("retry", "Retry"),
+            }}
+          />
+
           {/* Main Balance Card */}
           <View className="w-full overflow-hidden">
             {/* Hero Image with Overlay */}
@@ -283,16 +338,20 @@ export default function HomeComponent() {
             {/* Withdraw Button */}
             <View className="">
               <TouchableOpacity
-                className={`rounded-full py-4 ${
-                  currentBalance > 0 ? "bg-green-500" : "bg-gray-400"
-                }`}
+                className={`rounded-full py-4 ${currentBalance > 0 && !hasNoSiteAssigned ? "bg-green-500" : "bg-gray-400"
+                  }`}
                 onPress={currentBalance > 0 ? handleWithdrawPress : null}
-                disabled={currentBalance <= 0}
+                disabled={currentBalance <= 0 || hasNoSiteAssigned}
               >
                 <Text className="text-white text-center text-base font-semibold">
                   {t("withdrawCash")}
                 </Text>
               </TouchableOpacity>
+              {hasNoSiteAssigned && (
+                <Text className="text-orange-600 text-center text-xs mt-2">
+                  {t("siteRequiredForWithdraw", "Site assignment required")}
+                </Text>
+              )}
             </View>
           </View>
 
@@ -332,28 +391,26 @@ export default function HomeComponent() {
 
           {/* Loan Eligibility Card */}
           <TouchableOpacity
-            className={`py-6 px-4 rounded-lg border-2 ${
-              loanEligibility?.eligible
-                ? "bg-purple-50 border-purple-200 border-dashed"
-                : "bg-gray-50 border-gray-200"
-            }`}
+            className={`py-6 px-4 rounded-lg border-2 ${loanEligibility?.eligible && !hasNoSiteAssigned
+              ? "bg-purple-50 border-purple-200 border-dashed"
+              : "bg-gray-50 border-gray-200"
+              }`}
             onPress={handleLoanPress}
-            disabled={!loanEligibility?.eligible}
-            activeOpacity={loanEligibility?.eligible ? 0.7 : 1}
+            disabled={!loanEligibility?.eligible || hasNoSiteAssigned}
+            activeOpacity={loanEligibility?.eligible && !hasNoSiteAssigned ? 0.7 : 1}
           >
             <View className="flex-row justify-between items-center">
               <View className="flex-1 space-y-4">
                 <Text className="text-xl font-bold text-black mb-1">
-                  {loanEligibility?.eligible
+                  {loanEligibility?.eligible && !hasNoSiteAssigned
                     ? formatCurrency(maxLoanAmount)
                     : formatCurrency(0)}
                 </Text>
                 <Text
-                  className={`text-sm mb-2 ${
-                    loanEligibility?.eligible
-                      ? "text-purple-600"
-                      : "text-gray-500"
-                  }`}
+                  className={`text-sm mb-2 ${loanEligibility?.eligible && !hasNoSiteAssigned
+                    ? "text-purple-600"
+                    : "text-gray-500"
+                    }`}
                 >
                   {t("loanEligible", "Loan Available")}
                 </Text>
@@ -375,13 +432,18 @@ export default function HomeComponent() {
                       t("notEligible", "Not eligible for loan")}
                   </Text>
                 )}
+                {hasNoSiteAssigned && (
+                  <Text className="text-sm text-orange-600 mt-2">
+                    {t("siteRequiredForLoan", "Site assignment required for loans")}
+                  </Text>
+                )}
                 {loanEligibility?.outstanding_loan_balance > 0 && (
                   <Text className="text-sm text-orange-600 mt-2">
                     {t("outstandingLoan", "Outstanding")}:{" "}
                     {formatCurrency(loanEligibility.outstanding_loan_balance)}
                   </Text>
                 )}
-                {loanEligibility?.eligible && (
+                {loanEligibility?.eligible && !hasNoSiteAssigned && (
                   <View className="bg-purple-700 self-start px-3 py-4 rounded-full w-full mt-2">
                     <Text className="text-purple-100  text-center font-medium">
                       {t("tapToRequest", "Tap to request loan")}
@@ -389,46 +451,8 @@ export default function HomeComponent() {
                   </View>
                 )}
               </View>
-              {/* <View className={`rounded-xl w-16 h-16 justify-center items-center ${
-                loanEligibility?.eligible ? 'bg-purple-200' : 'bg-gray-200'
-              }`}>
-                <Text className="text-3xl">
-                  {loanEligibility?.eligible ? '🏦' : '🚫'}
-                </Text>
-                {loanEligibility?.eligible && (
-                  <View className="absolute -bottom-1 -right-1 bg-purple-600 rounded-full w-6 h-6 justify-center items-center">
-                    <Text className="text-white text-xs font-bold">+</Text>
-                  </View>
-                )}
-              </View> */}
             </View>
           </TouchableOpacity>
-
-          {/* User Info Card */}
-          {/* {wallet && wallet.user_name && (
-            <View className="py-6 border-t border-gray-100">
-              <View className="flex-row justify-between items-center">
-                <View className="flex-1">
-                  <Text className="text-lg font-semibold text-black mb-1">
-                    {wallet.user_name}
-                  </Text>
-                  {wallet.user_phone && (
-                    <Text className="text-gray-500 text-sm">
-                      {wallet.user_phone}
-                    </Text>
-                  )}
-                  {wallet.user_email && (
-                    <Text className="text-gray-500 text-sm">
-                      {wallet.user_email}
-                    </Text>
-                  )}
-                </View>
-                <View className="bg-green-200 rounded-xl w-16 h-16 justify-center items-center">
-                  <Text className="text-3xl">👤</Text>
-                </View>
-              </View>
-            </View>
-          )} */}
         </ScrollView>
       )}
 
@@ -461,8 +485,8 @@ export default function HomeComponent() {
 
             {/* Current Balance Display */}
             <View className="px-6 py-4 bg-gray-50 border-b border-gray-100">
-              <Text className="text-5xl text-gray-600 text-center">
-                {t("availableBalance", "Available Balance")}sddsd
+              <Text className="text-sm text-gray-600 text-center">
+                {t("availableBalance", "Available Balance")}
               </Text>
               <Text className="text-xl font-bold text-center text-green-600">
                 {formatCurrency(currentBalance)}
@@ -589,9 +613,8 @@ export default function HomeComponent() {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className={`flex-1 py-3 rounded-lg ml-2 ${
-                  loanLoading ? "bg-gray-400" : "bg-purple-600"
-                }`}
+                className={`flex-1 py-3 rounded-lg ml-2 ${loanLoading ? "bg-gray-400" : "bg-purple-600"
+                  }`}
                 onPress={handleLoanRequest}
                 disabled={loanLoading}
               >
