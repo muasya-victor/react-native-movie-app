@@ -1,11 +1,10 @@
 {
   "extends": "expo/tsconfig.base",
+  "skipLibCheck": true,
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
   },
   "include": [
@@ -13,6 +12,7 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts"
-, "services/siteService.ts"  ]
+    "nativewind-env.d.ts",
+    "services/siteService.ts"
+, "components/Home/Home.jsx"  ]
 }

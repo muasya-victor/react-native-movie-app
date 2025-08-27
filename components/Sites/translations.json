@@ -10,13 +10,13 @@
     "noSitesFound": "No sites found"
   },
   "sw": {
-    "mySites": "Tovuti Zangu",
-    "selectSiteToManage": "Chagua tovuti ya kusimamia",
-    "searchSites": "Tafuta tovuti...",
+    "mySites": "Kituo Zangu",
+    "selectSiteToManage": "Chagua kituo ya kusimamia",
+    "searchSites": "Tafuta kituo...",
     "workers": "wafanyakazi",
     "select": "Chagua",
     "active": "Hai",
     "inactive": "Haijai",
-    "noSitesFound": "Hakuna tovuti zilizopatikana"
+    "noSitesFound": "Hakuna kituo zilizopatikana"
   }
 }

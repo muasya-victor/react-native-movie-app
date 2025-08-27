@@ -55,8 +55,8 @@
     "pleaseEnterLastName": "Tafadhali ingiza jina la mwisho",
     "pleaseEnterPhoneNumber": "Tafadhali ingiza nambari ya simu",
     "invalidPhoneNumber": "Tafadhali ingiza nambari sahihi ya simu (muundo: 7xxxxxxxx)",
-    "noSiteSelected": "Hakuna tovuti iliyochaguliwa",
-    "addingToSite": "Kuongeza kwenye tovuti",
+    "noSiteSelected": "Hakuna kituo iliyochaguliwa",
+    "addingToSite": "Kuongeza kwenye kituo",
     "phoneNumberHint": "Ingiza nambari ya simu bila nambari ya nchi",
     "unexpectedError": "Hitilafu isiyotarajiwa imetokea",
     "dismiss": "Ondoa"
