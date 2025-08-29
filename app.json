@@ -2,6 +2,7 @@
   "expo": {
     "name": "mypay",
     "slug": "mypay",
+    "owner": "muasya-victor",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
@@ -38,7 +39,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/bg.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
@@ -66,7 +67,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "7c1e6e9a-2e21-490c-b0af-dae6ddec9345"
+        "projectId": "9db24e8a-ef54-44b2-96a2-165c68aac200"
       }
     }
   }

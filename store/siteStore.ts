@@ -1,4 +1,3 @@
-// store/siteStore.ts
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import {
@@ -13,14 +12,17 @@ interface SiteState {
   // Primary site data
   selectedSite: Site | null;
   workers: Worker[];
-
+  sites: Site[]; // Added to store all sites
+  
   // Loading states
   isLoadingSite: boolean;
   isAddingMembers: boolean;
   isAddingManagers: boolean;
+  isLoading: boolean; // Added for fetchSites loading state
 
   // Error states
   siteError: string | null;
+  error: string | null; // Added for fetchSites error state
 
   // Existing actions (backward compatibility)
   setSelectedSite: (site: Site | null) => void;
@@ -36,6 +38,7 @@ interface SiteState {
   ) => Promise<boolean>;
   clearSiteError: () => void;
   clearSiteData: () => void;
+  fetchSites: () => Promise<void>; // Added new action to fetch all sites
 
   // Computed getters
   getActiveWorkers: () => Worker[];
@@ -50,12 +53,41 @@ export const useSiteStore = create<SiteState>()(
       // Initial state
       selectedSite: null,
       workers: [],
+      sites: [], // Initialize the new sites array
       isLoadingSite: false,
       isAddingMembers: false,
       isAddingManagers: false,
+      isLoading: false, // Initialize new loading state
       siteError: null,
+      error: null, // Initialize new error state
 
       // Existing actions (backward compatibility)
+      fetchSites: async () => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const response = await siteService.getSites();
+          
+          if (response.success && response.data) {
+            set({ 
+              sites: response.data,
+              isLoading: false,
+              error: null 
+            });
+          } else {
+            set({ 
+              isLoading: false,
+              error: response.error?.message || 'Failed to fetch sites'
+            });
+          }
+        } catch (error) {
+          console.error('Error in fetchSites:', error);
+          set({ 
+            isLoading: false,
+            error: 'An unexpected error occurred while fetching sites'
+          });
+        }
+      },
       setSelectedSite: (site) => {
         set({ selectedSite: site });
 

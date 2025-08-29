@@ -1,4 +1,3 @@
-// services/siteService.ts
 import { apiRequest } from "./api";
 import translations from "./translations.json";
 
@@ -119,6 +118,42 @@ class SiteService {
     return getErrorMessage(key, defaultMessage, this.currentLanguage);
   }
 
+  async getSites(): Promise<SiteServiceResponse<Site[]>> {
+    try {
+      const response = await apiRequest('GET', '/sites');
+
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: response.data,
+        };
+      } else {
+        return {
+          success: false,
+          error: {
+            message: response.error?.message || this.getTranslatedError(
+              "failedToFetchSite",
+              "Failed to fetch sites"
+            )
+          },
+          data: null
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching sites:', error);
+      return {
+        success: false,
+        error: {
+          message: this.getTranslatedError(
+            "failedToFetchSite",
+            "Failed to fetch site data"
+          )
+        },
+        data: null
+      };
+    }
+  }
+
   /**
    * Fetch the current site data
    */
@@ -219,7 +254,7 @@ class SiteService {
   /**
    * Add members to a specific site
    */
-  async addMembers(siteId: number, request: AddMembersRequest): Promise<SiteServiceResponse> {
+  async addMembers(siteId: number, request: AddMembersRequest): Promise<SiteServiceResponse>  {
     try {
       const response = await apiRequest("POST", `/sites/${siteId}/add-members/`, request);
 
