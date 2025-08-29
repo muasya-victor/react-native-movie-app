@@ -163,7 +163,7 @@ export default function WithdrawalRequestFAB({
                 t("success", "Success"),
                 t(
                   "withdrawalRequestSuccess",
-                  `Withdrawal request for KES ${numericAmount.toLocaleString()} has been submitted successfully. You will be notified once it's processed.`
+                  `Withdrawal request for KES ${numericAmount.toLocaleString()} has been submitted successfully`
                 ),
                 [
                   {

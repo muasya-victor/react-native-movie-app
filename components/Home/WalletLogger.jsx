@@ -7,8 +7,8 @@ export default function WalletDataLogger() {
   const fetchWalletData = async () => {
     try {
       console.log('=== FETCHING WALLET DATA ===');
-      const response = await apiRequest('GET', '/wallets/wallets');
-      console.log('Full Response:', response.data?.results);   
+      const response = await apiRequest('GET', '/wallets/my-wallet/');
+      console.log('Full Response:', response.data);   
     } catch (error) {
       throw new Error(`Failed to fetch wallet data: ${error.message}`);
     }

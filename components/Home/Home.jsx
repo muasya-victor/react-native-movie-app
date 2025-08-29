@@ -48,7 +48,7 @@ export default function HomeComponent() {
       const response = await apiRequest("GET", "/wallets/my-wallet/");
       console.log("Wallet Response:", response);
 
-      if (response.success && response.data) {
+      if (response && response.data) {
         setWallet(response.data);
       }
     } catch (error) {
@@ -446,7 +446,7 @@ export default function HomeComponent() {
                 {loanEligibility?.eligible && !hasNoSiteAssigned && (
                   <View className="bg-purple-700 self-start px-3 py-4 rounded-full w-full mt-2">
                     <Text className="text-purple-100  text-center font-medium">
-                      {t("tapToRequest", "Tap to request loan")}
+                      {t("tapToRequest", "Tap to request advance")}
                     </Text>
                   </View>
                 )}

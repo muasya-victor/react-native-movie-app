@@ -1,20 +1,22 @@
 {
   "en": {
+    "lunchDistribution": "Lunch Distribution",
     "amountBorrowed": "Amount Borrowed",
-    "revenueFromBorrowing": "Revenue From Borrowing", 
-    "revenueFromFood": "Revenue From Food",
-    "lunchDistribution": "Distribute Food",
+    "revenueFromBorrowing": "Revenue from Borrowing",
+    "revenueFromFood": "Revenue from Food",
     "teamMembers": "Team Members",
-    "addWorkers": "Workers",
-    "addManager": "Manager"
+    "noTeamMembers": "No team members found",
+    "addWorkers": "Add Workers",
+    "addManager": "Add Manager"
   },
   "sw": {
+    "lunchDistribution": "Usambazaji wa Chakula cha Mchana",
     "amountBorrowed": "Kiasi Kilichokopwa",
-    "revenueFromBorrowing": "Mapato kutoka Ukopeshaji",
-    "revenueFromFood": "Mapato kutoka Chakula", 
-    "lunchDistribution": "Gawa Chakula",
+    "revenueFromBorrowing": "Mapato kutoka Ukopaji",
+    "revenueFromFood": "Mapato kutoka Chakula",
     "teamMembers": "Wanachama wa Timu",
-    "addWorkers": "Wafanyikazi",
-    "addManager": "Meneja"
+    "noTeamMembers": "Hakuna wanachama wa timu waliopatikana",
+    "addWorkers": "Ongeza Wafanyakazi",
+    "addManager": "Ongeza Meneja"
   }
 }

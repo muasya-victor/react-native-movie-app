@@ -25,7 +25,8 @@ export default function SmartSiteManager() {
     return (
       <SitesComponent 
         onSiteSelect={(site) => {
-          setSelectedSite(site);
+          console.log('Setting selected site in store:', site);
+          setSelectedSite(site); // This updates the Zustand store
           setShowSiteSelection(false);
         }}
       />
@@ -34,7 +35,8 @@ export default function SmartSiteManager() {
 
   // Site management interface (only shown after site selection)
   const handleSwitchSite = (site) => {
-    setSelectedSite(site);
+    console.log('Switching to site in store:', site);
+    setSelectedSite(site); // This updates the Zustand store
     setShowDropdown(false);
   };
 

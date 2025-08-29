@@ -18,7 +18,8 @@ export default function SitesComponent({ onSiteSelect = null }) {
   const { t } = useTranslation(translations);
 
   const handleSiteSelect = (site) => {
-    setSelectedSite(site);
+    console.log('Site selected, updating store:', site);
+    setSelectedSite(site); // Always update the Zustand store
     
     // If onSiteSelect prop is provided, call it (for SmartSiteManager)
     if (onSiteSelect) {

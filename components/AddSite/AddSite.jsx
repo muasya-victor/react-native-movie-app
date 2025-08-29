@@ -3,16 +3,16 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    Alert,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StatusBar,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import translations from './translations.json';
 
@@ -193,8 +193,8 @@ export default function AddSiteComponent() {
 
         {/* Manager Tabs */}
         <View className="flex-row mb-6">
-          <TouchableOpacity 
-            onPress={() => setActiveTab('new')}
+          {/* <TouchableOpacity 
+            onPress={() => setActiveTab('existing')}
             className="flex-1 mr-2"
           >
             <View className={`pb-2 border-b-2 ${activeTab === 'new' ? 'border-app-primary' : 'border-transparent'}`}>
@@ -204,9 +204,9 @@ export default function AddSiteComponent() {
                 {t('newManager')}
               </Text>
             </View>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           
-          <TouchableOpacity 
+          {/* <TouchableOpacity 
             onPress={() => setActiveTab('existing')}
             className="flex-1 ml-2"
           >
@@ -217,7 +217,7 @@ export default function AddSiteComponent() {
                 {t('selectFromExisting')}
               </Text>
             </View>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* Content based on active tab */}

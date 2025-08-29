@@ -31,7 +31,9 @@ const translations = {
   completeOrder: "Complete Order",
   loading: "Loading...",
   error: "Error occurred",
-  retry: "Retry"
+  retry: "Retry",
+  served: "Served",
+  alreadyServed: "Already served today"
 };
 
 export default function PlaceOrderComponent() {
@@ -57,6 +59,54 @@ export default function PlaceOrderComponent() {
   const [foodItems, setFoodItems] = useState([]);
   const [loadingFood, setLoadingFood] = useState(true);
   const [foodError, setFoodError] = useState(null);
+  
+  // New state for tracking served workers
+  const [servedWorkers, setServedWorkers] = useState(new Set());
+
+  // Helper function to get today's date string
+  const getTodayDateString = () => {
+    return new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  };
+
+  // Check if worker has been served today
+  const isWorkerServedToday = (workerId) => {
+    return servedWorkers.has(workerId);
+  };
+
+  // Mark worker as served
+  const markWorkerAsServed = (workerId) => {
+    setServedWorkers(prev => new Set([...prev, workerId]));
+    
+    // You can also save this to AsyncStorage for persistence across app restarts
+    // saveServedWorkersToStorage([...servedWorkers, workerId]);
+  };
+
+  // Load served workers from storage (optional - for persistence)
+  const loadServedWorkersFromStorage = async () => {
+    try {
+      // You can implement AsyncStorage here if you want persistence
+      // const storedData = await AsyncStorage.getItem(`served-${getTodayDateString()}`);
+      // if (storedData) {
+      //   setServedWorkers(new Set(JSON.parse(storedData)));
+      // }
+    } catch (error) {
+      console.error('Error loading served workers:', error);
+    }
+  };
+
+  // Save served workers to storage (optional - for persistence)
+  const saveServedWorkersToStorage = async (servedIds) => {
+    try {
+      // await AsyncStorage.setItem(`served-${getTodayDateString()}`, JSON.stringify(servedIds));
+    } catch (error) {
+      console.error('Error saving served workers:', error);
+    }
+  };
+
+  // Load served workers on component mount
+  useEffect(() => {
+    loadServedWorkersFromStorage();
+  }, []);
 
   // Fetch food items from API
   useEffect(() => {
@@ -69,6 +119,8 @@ export default function PlaceOrderComponent() {
       setFoodError(null);
       
       const response = await apiRequest('GET', '/food/menus/');
+
+      console.log('--------------------------------selected site', selectedSite?.teamMembers);
       
       if (response.success) {
         // Flatten all dishes from all menus into a single array
@@ -104,33 +156,26 @@ export default function PlaceOrderComponent() {
 
   // Get workers from selected site
   useEffect(() => {
-    if (selectedSite && selectedSite.members) {
+    if (selectedSite && selectedSite?.teamMembers) {
       setLoadingWorkers(true);
+
+      console.log('this are sites', selectedSite);
       
       // Transform site members to worker format
-      const siteWorkers = selectedSite.members.map(member => ({
-        id: member.user.id.toString(),
-        name: `${member.user.first_name} ${member.user.last_name}`,
-        email: member.user.email,
-        staffNumber: member.user.staff_number,
-        image: `https://images.unsplash.com/photo-150${member.user.id}003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face`, // Generate unique images
-        department: 'Worker',
-        siteId: member.site,
-        orders: []
-      }));
-      
-      console.log('=== WORKERS FROM SELECTED SITE ===');
-      console.log('Site:', selectedSite.name);
-      console.log('Total Members:', siteWorkers.length);
-      siteWorkers.forEach((worker, index) => {
-        console.log(`Worker ${index + 1}:`, {
-          id: worker.id,
-          name: `${worker.first_name} ${worker.last_name}`,
-          email: worker.email,
-          staffNumber: worker.staffNumber
-        });
-      });
-      console.log('==================================');
+      const siteWorkers = selectedSite.teamMembers
+        .filter(member => member?.role === "Worker")
+        .map(member => ({
+          id: member?.id.toString(),
+          name: `${member?.name}`,
+          email: member?.email,
+          staffNumber: member.user?.staff_number,
+          image: `https://images.unsplash.com/photo-150${member?.id}003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face`, // Generate unique images
+          department: 'Worker',
+          siteId: member?.site,
+          role: member?.role,
+          orders: []
+        }));
+
       
       setWorkers(siteWorkers);
       setSelectedWorker(siteWorkers[0] || null);
@@ -188,7 +233,27 @@ export default function PlaceOrderComponent() {
       Alert.alert('No Items', 'Please add some items to the order first.');
       return;
     }
-    
+
+    // Check if worker is already served today
+    if (isWorkerServedToday(selectedWorker.id)) {
+      Alert.alert(
+        'Already Served',
+        `${selectedWorker.name} has already been served today. Do you want to place another order?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Continue', 
+            onPress: () => proceedWithOrder(orderData)
+          }
+        ]
+      );
+      return;
+    }
+
+    proceedWithOrder(orderData);
+  };
+
+  const proceedWithOrder = async (orderData) => {
     setIsSubmitting(true);
     
     try {
@@ -198,6 +263,10 @@ export default function PlaceOrderComponent() {
       
       if (response.success) {
         console.log('✅ Order submitted successfully:', response.data);
+        
+        // Mark worker as served
+        markWorkerAsServed(selectedWorker.id);
+        
         Alert.alert(
           'Order Submitted!', 
           `Order for ${selectedWorker.name} has been placed successfully.`,
@@ -304,6 +373,7 @@ export default function PlaceOrderComponent() {
             {workers.map((worker) => {
               const isSelected = selectedWorker?.id === worker.id;
               const orderCount = getWorkerOrderItemCount(worker.id);
+              const isServed = isWorkerServedToday(worker.id);
               
               return (
                 <TouchableOpacity
@@ -318,10 +388,20 @@ export default function PlaceOrderComponent() {
                       source={{ uri: worker.image }}
                       className="w-12 h-12 rounded-full"
                       resizeMode="cover"
-                    />                    
-                    {/* Order Count Badge */}
+                    />
+                    
+                    {/* Served Status Indicator - Green dot at top-right */}
+                    {isServed && (
+                      <View className="absolute -top-1 -right-1 w-4 h-4 bg-app-primary rounded-full justify-center items-center border-2 border-white">
+                        <Text className="text-white text-xs font-bold">✓</Text>
+                      </View>
+                    )}
+                    
+                    {/* Order Count Badge - Only show if not served or if has current order */}
                     {orderCount > 0 && (
-                      <View className="absolute -top-2 -right-2 w-6 h-6 bg-app-danger rounded-full justify-center items-center border-2 border-white">
+                      <View className={`absolute -top-2 -left-2 w-6 h-6 bg-app-danger rounded-full justify-center items-center border-2 border-white ${
+                        isServed ? 'opacity-75' : ''
+                      }`}>
                         <Text className="text-white text-xs font-bold">{orderCount}</Text>
                       </View>
                     )}
@@ -331,6 +411,11 @@ export default function PlaceOrderComponent() {
                   }`} numberOfLines={1}>
                     {worker.name.split(' ')[0]}
                   </Text>
+                  {isServed && (
+                    <Text className="text-xs text-app-primary font-medium mt-1">
+                      {t('served')}
+                    </Text>
+                  )}
                 </TouchableOpacity>
               );
             })}
@@ -470,21 +555,46 @@ export default function PlaceOrderComponent() {
 
       {/* Selected Worker Info */}
       {selectedWorker ? (
-        <View className="px-4 py-4 bg-app-primary-light/50 border-b border-app-border">
+        <View className={`px-4 py-4 border-b border-app-border ${
+          isWorkerServedToday(selectedWorker.id) 
+            ? 'bg-app-primary-light/30' 
+            : 'bg-app-primary-light/50'
+        }`}>
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center flex-1">
-              <Image 
-                source={{ uri: selectedWorker.image }}
-                className="w-14 h-14 rounded-full mr-3"
-                resizeMode="cover"
-              />
+              <View className="relative">
+                <Image 
+                  source={{ uri: selectedWorker.image }}
+                  className="w-14 h-14 rounded-full mr-3"
+                  resizeMode="cover"
+                />
+                {isWorkerServedToday(selectedWorker.id) && (
+                  <View className="absolute -top-1 -right-1 w-5 h-5 bg-app-primary rounded-full justify-center items-center border-2 border-white">
+                    <Text className="text-white text-xs font-bold">✓</Text>
+                  </View>
+                )}
+              </View>
               <View className="flex-1">
-                <Text className="text-lg font-bold text-app-text-primary">
-                  {selectedWorker.name}
-                </Text>
+                <View className="flex-row items-center">
+                  <Text className="text-lg font-bold text-app-text-primary mr-2">
+                    {selectedWorker.name}
+                  </Text>
+                  {isWorkerServedToday(selectedWorker.id) && (
+                    <View className="bg-app-primary px-2 py-1 rounded-full">
+                      <Text className="text-white text-xs font-bold">
+                        {t('served')}
+                      </Text>
+                    </View>
+                  )}
+                </View>
                 <Text className="text-sm text-app-text-secondary">
                   {selectedWorker.staffNumber} • {t(selectedWorker.status)}
                 </Text>
+                {isWorkerServedToday(selectedWorker.id) && (
+                  <Text className="text-xs text-app-primary font-medium mt-1">
+                    {t('alreadyServed')}
+                  </Text>
+                )}
               </View>
             </View>
             {totalItems > 0 && (
@@ -573,6 +683,9 @@ export default function PlaceOrderComponent() {
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-app-text-secondary text-sm">
               {t('orderFor')} {selectedWorker.name}
+              {isWorkerServedToday(selectedWorker.id) && (
+                <Text className="text-app-primary font-medium"> • {t('served')}</Text>
+              )}
             </Text>
             <Text className="text-app-text-primary text-sm font-medium">
               {totalItems} {t('items')}

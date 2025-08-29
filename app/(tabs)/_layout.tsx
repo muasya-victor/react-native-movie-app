@@ -33,16 +33,6 @@ export default function TabsLayout() {
     if (userType === "SystemAdmin") {
       return [
         ...baseTabs,
-        {
-          name: "menu",
-          title: "Menu",
-          icon: "wine-outline",
-        },
-        {
-          name: "settings",
-          title: "Settings",
-          icon: "settings-outline",
-        },
         ...profile,
       ];
     }
@@ -50,11 +40,6 @@ export default function TabsLayout() {
     if (userType === "SiteManager") {
       return [
         ...baseTabs,
-        // {
-        //   name: "workers",
-        //   title: "Workers",
-        //   icon: "people-outline"
-        // },
         {
           name: "payments",
           title: "Payments",
@@ -77,11 +62,8 @@ export default function TabsLayout() {
         title: "Transactions",
         icon: "cash-outline",
       },
-      {
-        name: "withdrawal-requests",
-        title: "Requests",
-        icon: "document-text-outline",
-      },
+
+
       ...profile,
     ];
   };
@@ -118,6 +100,7 @@ export default function TabsLayout() {
 
       {/* Hidden routes - these pages exist but aren't shown in tabs */}
       <Tabs.Screen name="withdraw-mpesa" options={{ href: null }} />
+      <Tabs.Screen name="withdrawal-requests" options={{ href: null }} />
       <Tabs.Screen name="withdraw-without-mpesa" options={{ href: null }} />
       <Tabs.Screen name="add-worker" options={{ href: null }} />
       <Tabs.Screen name="worker/[id]" options={{ href: null }} />
@@ -125,6 +108,8 @@ export default function TabsLayout() {
       <Tabs.Screen name="worker-details" options={{ href: null }} />
       <Tabs.Screen name="place-order" options={{ href: null }} />
       <Tabs.Screen name="add-menu-item" options={{ href: null }} />
+      <Tabs.Screen name="menu" options={{ href: null }} />
+      <Tabs.Screen name="settings" options={{ href: null }} />
       <Tabs.Screen
         name="disbursements/confirmation-page"
         options={{ href: null }}
@@ -144,12 +129,7 @@ export default function TabsLayout() {
       {!visibleTabs.includes("sites") && (
         <Tabs.Screen name="sites" options={{ href: null }} />
       )}
-      {!visibleTabs.includes("menu") && (
-        <Tabs.Screen name="menu" options={{ href: null }} />
-      )}
-      {!visibleTabs.includes("settings") && (
-        <Tabs.Screen name="settings" options={{ href: null }} />
-      )}
+
     </Tabs>
   );
 }
