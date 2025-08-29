@@ -1,22 +1,24 @@
 {
   "en": {
-    "mySites": "My Sites",
-    "selectSiteToManage": "Select a site to manage",
-    "searchSites": "Search sites...",
-    "workers": "workers",
-    "select": "Select",
+    "selectSite": "Select Site",
+    "chooseSiteToManage": "Choose a site to manage",
+    "siteManagement": "Site Management",
+    "backToSiteSelection": "← Back to Site Selection",
+    "viewAllSites": "View All Sites",
     "active": "Active",
     "inactive": "Inactive",
-    "noSitesFound": "No sites found"
+    "noSitesAvailable": "No sites available",
+    "manageSite": "Manage Site"
   },
   "sw": {
-    "mySites": "Kituo Zangu",
-    "selectSiteToManage": "Chagua kituo ya kusimamia",
-    "searchSites": "Tafuta kituo...",
-    "workers": "wafanyakazi",
-    "select": "Chagua",
-    "active": "Hai",
-    "inactive": "Haijai",
-    "noSitesFound": "Hakuna kituo zilizopatikana"
+    "selectSite": "Chagua Tovuti",
+    "chooseSiteToManage": "Chagua tovuti ya kusimamia",
+    "siteManagement": "Usimamizi wa Tovuti",
+    "backToSiteSelection": "← Rudi kwenye Uchaguzi wa Tovuti",
+    "viewAllSites": "Ona Tovuti Zote",
+    "active": "Inatumika",
+    "inactive": "Haifanyi Kazi",
+    "noSitesAvailable": "Hakuna tovuti zinazopatikana",
+    "manageSite": "Simamia Tovuti"
   }
 }

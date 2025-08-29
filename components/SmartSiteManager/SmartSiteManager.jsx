@@ -17,15 +17,29 @@ import translations from './translations.json';
 export default function SmartSiteManager() {
   const { selectedSite, setSelectedSite } = useSiteStore();
   const { t } = useTranslation(translations);
+  const [showSiteSelection, setShowSiteSelection] = useState(true);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // If no site is selected, show the sites listing
-  if (!selectedSite) {
-    return <SitesComponent />;
+  // Always start with site selection page
+  if (showSiteSelection) {
+    return (
+      <SitesComponent 
+        onSiteSelect={(site) => {
+          setSelectedSite(site);
+          setShowSiteSelection(false);
+        }}
+      />
+    );
   }
 
+  // Site management interface (only shown after site selection)
   const handleSwitchSite = (site) => {
     setSelectedSite(site);
+    setShowDropdown(false);
+  };
+
+  const handleBackToSiteSelection = () => {
+    setShowSiteSelection(true);
     setShowDropdown(false);
   };
 
@@ -81,7 +95,7 @@ export default function SmartSiteManager() {
                 {selectedSite.address}
               </Text>
             </View>
-            <Text className={`text-lg text-app-accent ${showDropdown ? 'transform rotate-180' : ''}`}>
+            <Text className={`text-lg text-app-accent transition-transform ${showDropdown ? 'transform rotate-180' : ''}`}>
               ▼
             </Text>
           </TouchableOpacity>
@@ -97,19 +111,21 @@ export default function SmartSiteManager() {
               />
               
               <TouchableOpacity 
-                onPress={() => {
-                  setSelectedSite(null);
-                  setShowDropdown(false);
-                }}
+                onPress={handleBackToSiteSelection}
                 className="border-t border-app-divider p-3 bg-app-surface-variant"
               >
                 <Text className="text-center text-app-accent font-medium">
-                  {t('viewAllSites')}
+                  {t('backToSiteSelection')}
                 </Text>
               </TouchableOpacity>
             </View>
           )}
         </View>
+
+        {/* Page Title */}
+        <Text className="text-xl font-semibold text-app-text-primary text-center">
+          {t('siteManagement')}
+        </Text>
       </View>
 
       <View className="flex-1">
