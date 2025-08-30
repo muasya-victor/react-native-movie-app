@@ -1,5 +1,6 @@
 // components/PlaceOrder/PlaceOrder.js
 import { apiRequest } from '@/services/api';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useSiteStore } from '@/store/siteStore';
 import { useWorkersStore } from '@/store/workersStore';
 import { useRouter } from "expo-router";
@@ -16,30 +17,21 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
-
-// Define translations directly in component to avoid hook issues
-const translations = {
-  title: "Place Order",
-  selectWorker: "Select team member",
-  active: "Available",
-  busy: "Busy", 
-  offline: "Offline",
-  items: "items",
-  addToOrder: "Add",
-  addedToOrder: "Added to order!",
-  orderFor: "Order for",
-  completeOrder: "Complete Order",
-  loading: "Loading...",
-  error: "Error occurred",
-  retry: "Retry",
-  served: "Served",
-  alreadyServed: "Already served today"
-};
+import translations from './translations.json';
 
 export default function PlaceOrderComponent() {
   const router = useRouter();
+  const { t } = useTranslation(translations);
+  
+  // Site store
   const { selectedSite } = useSiteStore();
+
+  // Workers store
   const { 
+    workers,
+    selectedWorker,
+    setWorkers,
+    setSelectedWorker,
     updateOrderQuantity, 
     getWorkerOrders, 
     getWorkerOrderTotal, 
@@ -47,20 +39,17 @@ export default function PlaceOrderComponent() {
     clearWorkerOrders
   } = useWorkersStore();
   
-  // Simple translation function
-  const t = (key) => translations[key] || key;
-
+  // Local state
   const [successAnimation] = useState(new Animated.Value(0));
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedWorker, setSelectedWorker] = useState(null);
-  const [workers, setWorkers] = useState([]);
   const [loadingWorkers, setLoadingWorkers] = useState(true);
+  const [workersError, setWorkersError] = useState(null);
   const [foodItems, setFoodItems] = useState([]);
   const [loadingFood, setLoadingFood] = useState(true);
   const [foodError, setFoodError] = useState(null);
   
-  // New state for tracking served workers
+  // State for tracking served workers
   const [servedWorkers, setServedWorkers] = useState(new Set());
 
   // Helper function to get today's date string
@@ -81,19 +70,6 @@ export default function PlaceOrderComponent() {
     // saveServedWorkersToStorage([...servedWorkers, workerId]);
   };
 
-  // Load served workers from storage (optional - for persistence)
-  const loadServedWorkersFromStorage = async () => {
-    try {
-      // You can implement AsyncStorage here if you want persistence
-      // const storedData = await AsyncStorage.getItem(`served-${getTodayDateString()}`);
-      // if (storedData) {
-      //   setServedWorkers(new Set(JSON.parse(storedData)));
-      // }
-    } catch (error) {
-      console.error('Error loading served workers:', error);
-    }
-  };
-
   // Save served workers to storage (optional - for persistence)
   const saveServedWorkersToStorage = async (servedIds) => {
     try {
@@ -102,11 +78,6 @@ export default function PlaceOrderComponent() {
       console.error('Error saving served workers:', error);
     }
   };
-
-  // Load served workers on component mount
-  useEffect(() => {
-    loadServedWorkersFromStorage();
-  }, []);
 
   // Fetch food items from API
   useEffect(() => {
@@ -120,13 +91,13 @@ export default function PlaceOrderComponent() {
       
       const response = await apiRequest('GET', '/food/menus/');
 
-      console.log('--------------------------------selected site', selectedSite?.teamMembers);
+      console.log('Food items response:', response);
       
       if (response.success) {
         // Flatten all dishes from all menus into a single array
         const dishes = [];
-        response.data.results?.forEach(menu => {
-          menu.dishes?.forEach(dish => {
+        (response.data.results || []).forEach(menu => {
+          (menu.dishes || []).forEach(dish => {
             dishes.push({
               ...dish,
               menuName: menu.name,
@@ -154,39 +125,66 @@ export default function PlaceOrderComponent() {
     }
   };
 
-  // Get workers from selected site
+  // Fetch workers when site changes
   useEffect(() => {
-    if (selectedSite && selectedSite?.teamMembers) {
-      setLoadingWorkers(true);
+    const fetchWorkers = async () => {
+      if (selectedSite) {
+        console.log('Fetching workers for site:', selectedSite);
+        
+        setLoadingWorkers(true);
+        setWorkersError(null);
 
-      console.log('this are sites', selectedSite);
-      
-      // Transform site members to worker format
-      const siteWorkers = selectedSite.teamMembers
-        .filter(member => member?.role === "Worker")
-        .map(member => ({
-          id: member?.id.toString(),
-          name: `${member?.name}`,
-          email: member?.email,
-          staffNumber: member.user?.staff_number,
-          image: `https://images.unsplash.com/photo-150${member?.id}003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face`, // Generate unique images
-          department: 'Worker',
-          siteId: member?.site,
-          role: member?.role,
-          orders: []
-        }));
+        try {
+          const response = await apiRequest('GET', `/sites/${selectedSite?.id}`);
 
-      
-      setWorkers(siteWorkers);
-      setSelectedWorker(siteWorkers[0] || null);
-      setLoadingWorkers(false);
-    } else {
-      console.warn('No site selected or site has no members');
-      setWorkers([]);
-      setSelectedWorker(null);
-      setLoadingWorkers(false);
-    }
-  }, [selectedSite]);
+          console.log('Workers response:', response?.data?.members);
+          
+          if (response.success && response.data?.members) {
+            const siteWorkers = (response.data.members || [])
+              .filter(member => member?.user) // Filter out members without user data
+              .map(member => ({
+                id: member.user.id,
+                name: `${member.user.first_name || ''} ${member.user.last_name || ''}`.trim(),
+                email: member.user.email || '',
+                staffNumber: member.user.staff_number || '',
+                image: `https://images.unsplash.com/photo-150${member.id}003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face`,
+                siteId: member.site,
+                role: member.user.role || 'Member',
+                status: 'active',
+                orders: []
+              }));
+
+            console.log('Processed workers:', siteWorkers);
+            
+            // Set workers in store
+            setWorkers(siteWorkers);
+            
+            // Auto-select first worker if none selected and workers available
+            if (siteWorkers.length > 0 && !selectedWorker) {
+              setSelectedWorker(siteWorkers[0]);
+            }
+          } else {
+            console.error('Failed to fetch workers:', response.error);
+            setWorkersError(response.error?.message || 'Failed to load workers');
+            setWorkers([]);
+          }
+        } catch (error) {
+          console.error('Error fetching workers:', error);
+          setWorkersError('Network error while loading workers');
+          setWorkers([]);
+        } finally {
+          setLoadingWorkers(false);
+        }
+      } else {
+        console.warn('No site selected');
+        setWorkers([]);
+        setSelectedWorker(null);
+        setLoadingWorkers(false);
+      }
+    };
+
+    fetchWorkers();
+  }, [selectedSite, setWorkers, setSelectedWorker]);
 
   const animateSuccess = () => {
     setShowSuccess(true);
@@ -259,7 +257,7 @@ export default function PlaceOrderComponent() {
     try {
       const response = await apiRequest('POST', '/food/food-purchases/', orderData);
 
-      console.log(orderData, 'res');
+      console.log('Order submission response:', response);
       
       if (response.success) {
         console.log('✅ Order submitted successfully:', response.data);
@@ -342,13 +340,39 @@ export default function PlaceOrderComponent() {
           </Text>
           <View className="items-center py-4">
             <ActivityIndicator size="small" color="#4CAF50" />
-            <Text className="text-app-text-secondary text-sm mt-2">Loading workers...</Text>
+            <Text className="text-app-text-secondary text-sm mt-2">
+              {t('loadingWorkers')}
+            </Text>
           </View>
         </View>
       );
     }
 
-    if (workers.length === 0) {
+    if (workersError) {
+      return (
+        <View className="px-4 py-4 bg-white border-b border-app-border">
+          <Text className="text-sm font-medium text-app-text-secondary mb-3">
+            {t('selectWorker')}
+          </Text>
+          <View className="items-center py-4">
+            <Text className="text-app-text-tertiary text-center mb-2">
+              {workersError}
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setWorkersError(null);
+                // Trigger refetch - you could add a refetch function here
+              }}
+              className="bg-app-primary px-4 py-2 rounded-lg"
+            >
+              <Text className="text-white font-medium">{t('retry')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    }
+
+    if (!workers || workers.length === 0) {
       return (
         <View className="px-4 py-4 bg-white border-b border-app-border">
           <Text className="text-sm font-medium text-app-text-secondary mb-3">
@@ -356,7 +380,7 @@ export default function PlaceOrderComponent() {
           </Text>
           <View className="items-center py-4">
             <Text className="text-app-text-tertiary text-center">
-              No workers available. Please select a site first.
+              {t('noWorkersAvailable')}
             </Text>
           </View>
         </View>
@@ -366,7 +390,7 @@ export default function PlaceOrderComponent() {
     return (
       <View className="px-4 py-4 bg-white border-b border-app-border">
         <Text className="text-sm font-medium text-app-text-secondary mb-3">
-          {t('selectWorker')} ({workers.length} available)
+          {t('selectWorker')} ({workers.length} {t('available')})
         </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View className="flex-row space-x-3">
@@ -441,11 +465,13 @@ export default function PlaceOrderComponent() {
             resizeMode="cover"
           />
           <View className="absolute top-2 right-2 bg-white/95 px-2 py-1 rounded-full">
-            <Text className="text-app-text-primary text-xs font-bold">KSh {item.price}</Text>
+            <Text className="text-app-text-primary text-xs font-bold">
+              KSh {item.price}
+            </Text>
           </View>
           {!item.available && (
             <View className="absolute inset-0 bg-black/50 justify-center items-center">
-              <Text className="text-white font-bold text-sm">Unavailable</Text>
+              <Text className="text-white font-bold text-sm">{t('unavailable')}</Text>
             </View>
           )}
         </View>
@@ -491,7 +517,7 @@ export default function PlaceOrderComponent() {
             )
           ) : (
             <View className="bg-app-surface-variant py-2 px-4 rounded-full items-center">
-              <Text className="text-app-text-tertiary text-sm font-medium">Unavailable</Text>
+              <Text className="text-app-text-tertiary text-sm font-medium">{t('unavailable')}</Text>
             </View>
           )}
         </View>
@@ -520,16 +546,16 @@ export default function PlaceOrderComponent() {
         <View className="flex-1 items-center justify-center px-4">
           <Text className="text-app-text-tertiary text-4xl mb-4">🏗️</Text>
           <Text className="text-app-text-primary text-lg font-semibold mb-2 text-center">
-            No Site Selected
+            {t('noSiteSelected')}
           </Text>
           <Text className="text-app-text-secondary text-center mb-6">
-            Please select a site first to view workers and place orders.
+            {t('noSiteDescription')}
           </Text>
           <TouchableOpacity 
             className="bg-app-primary px-6 py-3 rounded-lg"
             onPress={() => router.back()}
           >
-            <Text className="text-white font-medium">Go Back</Text>
+            <Text className="text-white font-medium">{t('goBack')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -588,7 +614,7 @@ export default function PlaceOrderComponent() {
                   )}
                 </View>
                 <Text className="text-sm text-app-text-secondary">
-                  {selectedWorker.staffNumber} • {t(selectedWorker.status)}
+                  {selectedWorker.role || t('active')}
                 </Text>
                 {isWorkerServedToday(selectedWorker.id) && (
                   <Text className="text-xs text-app-primary font-medium mt-1">
@@ -609,7 +635,7 @@ export default function PlaceOrderComponent() {
       ) : (
         <View className="px-4 py-4 bg-app-surface border-b border-app-border">
           <Text className="text-app-text-secondary text-center">
-            Please select a worker to place an order
+            {t('selectWorkerToOrder')}
           </Text>
         </View>
       )}
@@ -650,7 +676,7 @@ export default function PlaceOrderComponent() {
           ListEmptyComponent={
             <View className="items-center justify-center py-12">
               <Text className="text-app-text-secondary text-base text-center">
-                No food items available
+                {t('noFoodItems')}
               </Text>
             </View>
           }
@@ -699,7 +725,7 @@ export default function PlaceOrderComponent() {
             disabled={isSubmitting}
           >
             <Text className="text-white text-lg font-bold mr-2">
-              {isSubmitting ? 'Submitting...' : t('completeOrder')}
+              {isSubmitting ? t('submitting') : t('completeOrder')}
             </Text>
             <View className="bg-white/20 px-3 py-1 rounded-full">
               <Text className="text-white text-sm font-bold">

@@ -1,4 +1,5 @@
 // components/Sites/Sites.js
+import { useTranslation } from '@/hooks/useTranslation';
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import {
@@ -10,10 +11,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useTranslation } from '../../hooks/useTranslation';
 import { useSiteStore } from '../../store/siteStore';
-// import useSitesStore from '@/store/sitesStore';
 import translations from './translations.json';
+// import useSitesStore from '@/store/sitesStore';
 
 export default function SitesComponent() {
   const router = useRouter();
@@ -29,33 +29,27 @@ export default function SitesComponent() {
     fetchSites,
     selectSite: selectSiteFromStore,
     clearErrors,
-  } = useSitesStore();
+    setSelectedSite,
+    selectedSite,
 
-  // Site store for managing selected site
-  const { setSelectedSite, selectedSite } = useSiteStore();
+  } = useSiteStore();
+
 
   useEffect(() => {
     fetchSites();
   }, []);
+
 
   const handleRefresh = async () => {
     clearErrors();
     await fetchSites();
   };
 
-  const handleSelectSite = async (site) => {
-    const success = await selectSiteFromStore(site.id, (selectedSite) => {
-      // Update the main site store with selected site
-      setSelectedSite(selectedSite);
-      
-      // Navigate back or to main screen
-      router.back();
-    });
+  const handleSelectSite = (site) => {
+    console.log('Site selected, updating store:', site);
+    setSelectedSite(site); 
 
-    if (!success && selectError) {
-      // Handle error - could show toast or alert
-      console.error('Failed to select site:', selectError);
-    }
+    router.push('/manage-site')
   };
 
   const getStatusIndicator = (status) => {
@@ -133,7 +127,7 @@ export default function SitesComponent() {
                   style={{ color: statusConfig.color }} 
                   className="text-xs font-medium"
                 >
-                  {t(`status.${item.status.toLowerCase().replace(' ', '_')}`)}
+                  {t(`status.${item?.status}`)}
                 </Text>
               </View>
 

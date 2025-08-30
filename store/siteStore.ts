@@ -1,11 +1,11 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import {
-  siteService,
-  Site,
-  Worker,
-  AddMembersRequest,
   AddManagersRequest,
+  AddMembersRequest,
+  Site,
+  siteService,
+  Worker,
 } from "../services/siteService";
 
 interface SiteState {
@@ -63,13 +63,16 @@ export const useSiteStore = create<SiteState>()(
       // Existing actions (backward compatibility)
       fetchSites: async () => {
         set({ isLoading: true, error: null });
+        console.log('-\n -\n -\n -\n -\n -\n -\n -\n -\n -\n fethching sites');
+        
         
         try {
           const response = await siteService.getSites();
           
+          
           if (response.success && response.data) {
             set({ 
-              sites: response.data,
+              sites: response.data?.results,
               isLoading: false,
               error: null 
             });
@@ -117,6 +120,9 @@ export const useSiteStore = create<SiteState>()(
 
         try {
           const response = await siteService.getCurrentSite();
+
+          console.log('current sire', response);
+          
 
           if (response.success && response.data) {
             set({
