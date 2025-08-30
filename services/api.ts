@@ -2,11 +2,13 @@
 import axios from "axios";
 import { useRouter } from "expo-router";
 import { useUserStore } from "../store/userStore";
+import { handleErrorWithToast } from "../utils/errorHandler";
 const router = useRouter();
 
 // Create an axios instance
 const api = axios.create({
-  baseURL: process.env.API_BASE_URL || "http://167.86.92.49:8000/api",
+  // baseURL: process.env.API_BASE_URL || "http://167.86.92.49:8000/api",
+  baseURL: "http://localhost:8000/api",
   timeout: Number(process.env.API_TIMEOUT) || 10000,
 });
 
@@ -57,45 +59,6 @@ const refreshAccessToken = async () => {
   }
 };
 
-// Function to standardize error responses, especially for 500 and 404 errors
-const standardizeError = (error) => {
-  const status = error.response?.status || 500;
-
-  // For 500+ errors, return a standardized JSON error object
-  if (status >= 500) {
-    return {
-      error: "Internal Server Error",
-      message: "An unexpected server error occurred. Please try again later.",
-      status: status,
-      code: "SERVER_ERROR",
-      timestamp: new Date().toISOString(),
-    };
-  }
-
-  // For 404 errors, return a standardized JSON error object
-  if (status === 404) {
-    return {
-      error: "Not Found",
-      message:
-        "The requested resource was not found. Please check the URL and try again.",
-      status: status,
-      code: "NOT_FOUND",
-      timestamp: new Date().toISOString(),
-    };
-  }
-
-  // For other errors, return the original error data or a fallback
-  return (
-    error.response?.data || {
-      error: "Request Failed",
-      message: error.message || "An unknown error occurred",
-      status: status,
-      code: "REQUEST_ERROR",
-      timestamp: new Date().toISOString(),
-    }
-  );
-};
-
 // Request interceptor to add token
 api.interceptors.request.use(
   async (config) => {
@@ -122,9 +85,8 @@ api.interceptors.response.use(
 
       try {
         const newToken = await refreshAccessToken();
-        
+
         // console.log();
-        
 
         // Retry the original request with new token
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
@@ -164,7 +126,7 @@ export async function apiRequest(method, endpoint, data = null, headers = {}) {
     console.error(`API Request Error [${method} ${endpoint}]:`, error);
 
     // Use standardized error for consistent error handling
-    const standardizedError = standardizeError(error);
+    const standardizedError = handleErrorWithToast(error);
 
     return {
       success: false,
@@ -202,7 +164,7 @@ export async function apiRequestNoAuth(
     );
 
     // Use standardized error for consistent error handling
-    const standardizedError = standardizeError(error);
+    const standardizedError = handleErrorWithToast(error);
 
     return {
       success: false,

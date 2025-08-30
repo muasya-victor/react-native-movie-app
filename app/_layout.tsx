@@ -1,8 +1,9 @@
-import { Stack } from "expo-router";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext"; // Adjust path as needed
+import { SiteProvider } from "@/contexts/SiteContext";
+import { Stack } from "expo-router";
+import Toast from "react-native-toast-message";
 import "./global.css";
-import { AuthProvider } from '@/contexts/AuthContext';
-import { SiteProvider } from '@/contexts/SiteContext'
 
 export default function RootLayout() {
   return (
@@ -21,8 +22,7 @@ export default function RootLayout() {
           </Stack>
         </LanguageProvider>
       </SiteProvider>
-      
+      <Toast />
     </AuthProvider>
-    
   );
 }

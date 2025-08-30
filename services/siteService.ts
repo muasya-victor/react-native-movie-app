@@ -36,6 +36,31 @@ interface Site {
   managers: SiteManager[];
 }
 
+// Interface for sites list endpoint
+interface SiteListItem {
+  name: string;
+  location: string;
+  daily_wage_rate: string;
+  auto_execute_accruals: boolean;
+  image: string | null;
+  loan_interest_rate: number;
+  created_at: string;
+  members_count: string;
+  managers_count: string;
+}
+
+interface SiteListResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: SiteListItem[];
+}
+
+interface SiteOption {
+  key: number;
+  value: string;
+}
+
 interface Worker {
   id: number;
   name: string;
@@ -82,6 +107,12 @@ interface SiteServiceResponse<T = any> {
     key?: string;
     originalError?: any;
   };
+}
+
+interface SiteListParams {
+  page?: number;
+  search?: string;
+  limit?: number;
 }
 
 // Translation helper
@@ -203,6 +234,176 @@ class SiteService {
         );
       } else if (error?.message) {
         errorMessage = error.message;
+      }
+
+      return {
+        success: false,
+        error: {
+          message: errorMessage,
+          key: errorKey,
+          originalError: error,
+        },
+      };
+    }
+  }
+
+  /**
+   * Fetch all sites with pagination and search
+   */
+  async getSites(params: SiteListParams = {}): Promise<SiteServiceResponse<SiteListResponse>> {
+    try {
+      // Build query parameters
+      const queryParams = new URLSearchParams();
+      
+      if (params.page && params.page > 1) {
+        queryParams.append('page', params.page.toString());
+      }
+      
+      if (params.search && params.search.trim()) {
+        queryParams.append('search', params.search.trim());
+      }
+      
+      if (params.limit) {
+        queryParams.append('limit', params.limit.toString());
+      }
+
+      const endpoint = `/sites${queryParams.toString() ? `?${queryParams.toString()}` : ''}/`;
+      const response = await apiRequest("GET", endpoint);
+
+      if (response.success) {
+        return {
+          success: true,
+          data: response.data,
+        };
+      }
+
+      return {
+        success: false,
+        error: {
+          message: this.getTranslatedError(
+            "failedToFetchSites",
+            "Failed to fetch sites data"
+          ),
+          originalError: response.error,
+        },
+      };
+    } catch (error: any) {
+      console.error("Error fetching sites:", error);
+
+      // Determine error type for better messaging
+      let errorKey = "unexpectedError";
+      let errorMessage = this.getTranslatedError(
+        "unexpectedError",
+        "An unexpected error occurred"
+      );
+
+      if (
+        error?.code === "NETWORK_ERROR" ||
+        error?.message?.includes("Network")
+      ) {
+        errorKey = "networkError";
+        errorMessage = this.getTranslatedError(
+          "networkError",
+          "Network connection error"
+        );
+      } else if (error?.response?.status === 401) {
+        errorKey = "authenticationFailed";
+        errorMessage = this.getTranslatedError(
+          "authenticationFailed",
+          "Authentication failed - please login again"
+        );
+      } else if (error?.response?.status === 403) {
+        errorKey = "accessDenied";
+        errorMessage = this.getTranslatedError(
+          "accessDenied",
+          "Access denied - insufficient permissions"
+        );
+      } else if (error?.response?.status >= 500) {
+        errorKey = "serverError";
+        errorMessage = this.getTranslatedError(
+          "serverError",
+          "Server error occurred"
+        );
+      } else if (error?.response?.status === 429) {
+        errorKey = "rateLimitExceeded";
+        errorMessage = this.getTranslatedError(
+          "rateLimitExceeded",
+          "Too many requests - please wait"
+        );
+      }
+
+      return {
+        success: false,
+        error: {
+          message: errorMessage,
+          key: errorKey,
+          originalError: error,
+        },
+      };
+    }
+  }
+
+  /**
+   * Fetch site options for dropdowns/selections
+   */
+  async getSiteOptions(): Promise<SiteServiceResponse<SiteOption[]>> {
+    try {
+      const response = await apiRequest("GET", "/sites/options");
+
+      if (response.success) {
+        return {
+          success: true,
+          data: response.data,
+        };
+      }
+
+      return {
+        success: false,
+        error: {
+          message: this.getTranslatedError(
+            "failedToFetchSiteOptions",
+            "Failed to fetch site options"
+          ),
+          originalError: response.error,
+        },
+      };
+    } catch (error: any) {
+      console.error("Error fetching site options:", error);
+
+      // Determine error type for better messaging
+      let errorKey = "unexpectedError";
+      let errorMessage = this.getTranslatedError(
+        "unexpectedError",
+        "An unexpected error occurred"
+      );
+
+      if (
+        error?.code === "NETWORK_ERROR" ||
+        error?.message?.includes("Network")
+      ) {
+        errorKey = "networkError";
+        errorMessage = this.getTranslatedError(
+          "networkError",
+          "Network connection error"
+        );
+      } else if (error?.response?.status === 401) {
+        errorKey = "authenticationFailed";
+        errorMessage = this.getTranslatedError(
+          "authenticationFailed",
+          "Authentication failed - please login again"
+        );
+      } else if (error?.response?.status === 403) {
+        errorKey = "accessDenied";
+        errorMessage = this.getTranslatedError(
+          "accessDenied",
+          "Access denied - insufficient permissions"
+        );
+      } else if (error?.response?.status >= 500) {
+        errorKey = "serverError";
+        errorMessage = this.getTranslatedError(
+          "serverError",
+          "Server error occurred"
+        );
       }
 
       return {
@@ -429,11 +630,25 @@ class SiteService {
   }
 
   /**
+   * Validate site list item structure
+   */
+  validateSiteListItem(siteItem: SiteListItem): boolean {
+    if (!siteItem) return false;
+
+    const requiredFields: (keyof SiteListItem)[] = ["name", "location"];
+    return requiredFields.every(
+      (field) => siteItem[field] !== undefined && siteItem[field] !== null
+    );
+  }
+
+  /**
    * Get loading message for current operation
    */
   getLoadingMessage(operation: string): string {
     const loadingKeys: Record<string, string> = {
       fetchSite: "fetchingCurrentSite",
+      fetchSites: "fetchingSites",
+      fetchSiteOptions: "fetchingSiteOptions",
       loadWorkers: "loadingWorkers",
       processData: "processingData",
       retry: "retrying",
@@ -487,6 +702,21 @@ class SiteService {
       phone_numbers: phoneNumbers,
     };
   }
+
+  /**
+   * Helper method to create site list params
+   */
+  createSiteListParams(
+    page?: number,
+    search?: string,
+    limit?: number
+  ): SiteListParams {
+    return {
+      page,
+      search,
+      limit,
+    };
+  }
 }
 
 // Export the singleton instance
@@ -497,11 +727,15 @@ export type {
   Site,
   SiteMember,
   SiteManager,
+  SiteListItem,
+  SiteListResponse,
+  SiteOption,
   User,
   Worker,
   PhoneNumberInput,
   AddMembersRequest,
   AddManagersRequest,
   SiteServiceResponse,
+  SiteListParams,
   ApiResponse,
 };
