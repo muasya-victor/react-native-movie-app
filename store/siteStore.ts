@@ -22,9 +22,8 @@ interface SiteState {
 
   // Error states
   siteError: string | null;
-  error: string | null; // Added for fetchSites error state
+  error: string | null;
 
-  // Existing actions (backward compatibility)
   setSelectedSite: (site: Site | null) => void;
   clearSelectedSite: () => void;
   isLoggedIntoSite: () => boolean;
