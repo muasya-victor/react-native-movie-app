@@ -1,302 +1,256 @@
 // components/Sites/Sites.js
-import { useTranslation } from "@/hooks/useTranslation";
-import { useSiteStore } from "@/store/siteStore";
-import React, { useCallback, useEffect } from "react";
+import { useTranslation } from '@/hooks/useTranslation';
+import { useRouter } from "expo-router";
+import React, { useEffect } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   RefreshControl,
   StatusBar,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import translations from "./translations.json";
+import { useSiteStore } from '../../store/siteStore';
+import translations from './translations.json';
+// import useSitesStore from '@/store/sitesStore';
 
-export default function SitesComponent({ onSiteSelect = null }) {
+export default function SitesComponent() {
+  const router = useRouter();
+  const { t, currentLanguage } = useTranslation(translations);
+  
+  // Sites store for fetching available sites
   const {
-    selectedSite,
+    sites,
+    isLoading,
+    error,
+    isSelecting,
+    selectError,
+    fetchSites,
+    selectSite: selectSiteFromStore,
+    clearErrors,
     setSelectedSite,
-    sitesList,
-    isLoadingSitesList,
-    isRefreshingSites,
-    isLoadingMoreSites,
-    sitesListError,
-    sitesListPagination,
-    sitesSearchQuery,
-    fetchSitesList,
-    loadMoreSites,
-    refreshSitesList,
-    searchSites,
-    setSitesSearchQuery,
-    clearSitesListError,
+    selectedSite,
+
   } = useSiteStore();
 
-  const { t } = useTranslation(translations);
 
-  // Initial load
   useEffect(() => {
-    if (!isLoadingSitesList) {
-      fetchSitesList();
-    }
+    fetchSites();
   }, []);
 
-  const handleSiteSelect = (siteItem) => {
-    console.log("Site selected from list:", siteItem);
 
-    // Transform SiteListItem to Site format for backward compatibility
-    const siteForStore = {
-      id: siteItem.id || Date.now(), // Fallback ID if not provided
-      name: siteItem.name,
-      location: siteItem.location,
-      image: siteItem.image,
-      auto_execute_accruals: siteItem.auto_execute_accruals,
-      loan_interest_rate: siteItem.loan_interest_rate,
-      daily_wage_rate: siteItem.daily_wage_rate,
-      created_at: siteItem.created_at,
-      members: [], // Will be populated when needed
-      managers: [], // Will be populated when needed
-      members_count: siteItem.members_count,
-      managers_count: siteItem.managers_count,
-    };
-
-    setSelectedSite(siteForStore);
-
-    // If onSiteSelect prop is provided, call it (for SmartSiteManager)
-    if (onSiteSelect) {
-      onSiteSelect(siteForStore);
-    }
+  const handleRefresh = async () => {
+    clearErrors();
+    await fetchSites();
   };
 
-  const handleRefresh = useCallback(() => {
-    clearSitesListError();
-    refreshSitesList();
-  }, []);
+  const handleSelectSite = (site) => {
+    console.log('Site selected, updating store:', site);
+    setSelectedSite(site); 
 
-  const handleLoadMore = useCallback(() => {
-    if (sitesListPagination.hasMore && !isLoadingMoreSites) {
-      loadMoreSites();
-    }
-  }, [sitesListPagination.hasMore, isLoadingMoreSites]);
+    router.push('/manage-site')
+  };
 
-  const handleSearch = useCallback((query) => {
-    setSitesSearchQuery(query);
-    // Debounce search
-    const timeoutId = setTimeout(() => {
-      searchSites(query);
-    }, 500);
+  const getStatusIndicator = (status) => {
+    const statusConfig = {
+      'Active': {
+        color: '#4CAF50',
+        backgroundColor: '#E8F5E8',
+        icon: '●'
+      },
+      'Under Construction': {
+        color: '#FF9800',
+        backgroundColor: '#FFF3E0',
+        icon: '🚧'
+      },
+      'Inactive': {
+        color: '#9E9E9E',
+        backgroundColor: '#F5F5F5',
+        icon: '○'
+      }
+    };
 
-    return () => clearTimeout(timeoutId);
-  }, []);
+    return statusConfig[status] || statusConfig['Inactive'];
+  };
 
-  const renderSiteItem = ({ item }) => (
-    <TouchableOpacity
-      onPress={() => handleSiteSelect(item)}
-      className="bg-app-surface rounded-lg p-4 mb-3 shadow-sm border border-app-border"
-    >
-      <View className="flex-row items-center">
-        {/* Site Image */}
-        <View className="w-16 h-16 rounded-lg mr-4 bg-app-border justify-center items-center">
-          {item.image ? (
-            <Image
-              source={{ uri: item.image }}
-              className="w-16 h-16 rounded-lg"
-              resizeMode="cover"
-            />
-          ) : (
-            <Text className="text-app-text-tertiary text-xs text-center">
-              No{"\n"}Image
-            </Text>
-          )}
-        </View>
-
-        <View className="flex-1">
-          {/* Site Name */}
-          <Text className="text-base font-semibold text-app-text-primary mb-1">
-            {item.name}
-          </Text>
-
-          {/* Site Location */}
-          <Text className="text-sm text-app-text-secondary mb-2">
-            {item.location}
-          </Text>
-
-          {/* Site Stats */}
-          <View className="flex-row items-center space-x-4">
-            <Text className="text-xs text-app-text-tertiary">
-              {item.members_count} {t("workers")}
-            </Text>
-            <Text className="text-xs text-app-text-tertiary">
-              {item.managers_count} {t("managers")}
-            </Text>
-          </View>
-
-          {/* Status indicator based on auto_execute_accruals */}
-          <View className="flex-row items-center mt-2">
-            <View
-              className={`w-2 h-2 rounded-full mr-2 ${
-                item.auto_execute_accruals
-                  ? "bg-app-primary"
-                  : "bg-app-text-tertiary"
-              }`}
-            />
-            <Text
-              className={`text-xs font-medium ${
-                item.auto_execute_accruals
-                  ? "text-app-primary"
-                  : "text-app-text-tertiary"
-              }`}
-            >
-              {item.auto_execute_accruals ? t("active") : t("inactive")}
-            </Text>
-          </View>
-        </View>
-
-        {/* Selection indicator */}
-        {selectedSite?.name === item.name && (
-          <View className="w-6 h-6 bg-app-primary rounded-full justify-center items-center">
-            <Text className="text-white text-xs font-bold">✓</Text>
-          </View>
-        )}
-
-        {/* Arrow indicator */}
-        <Text className="text-app-accent text-lg ml-2">›</Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderHeader = () => (
-    <View className="mb-4">
-      {/* Search Input */}
-      <TextInput
-        value={sitesSearchQuery}
-        onChangeText={handleSearch}
-        placeholder={t("searchSites")}
-        placeholderTextColor="#9CA3AF"
-        className="bg-app-surface border border-app-border rounded-lg px-4 py-3 text-app-text-primary"
-        autoCorrect={false}
-        autoCapitalize="none"
-      />
-    </View>
-  );
-
-  const renderFooter = () => {
-    if (!isLoadingMoreSites) return null;
+  const renderSiteItem = ({ item }) => {
+    const statusConfig = getStatusIndicator(item.status);
+    const isCurrentSite = selectedSite?.id === item.id;
 
     return (
-      <View className="py-4 justify-center items-center">
-        <ActivityIndicator size="small" color="#3B82F6" />
-        <Text className="text-app-text-secondary text-sm mt-2">
-          {t("loadingMore")}
-        </Text>
-      </View>
+      <TouchableOpacity
+        onPress={() => handleSelectSite(item)}
+        disabled={isSelecting}
+        className={`bg-app-surface rounded-lg p-4 mb-3 mx-4 shadow-sm ${
+          isCurrentSite ? 'border-2 border-app-primary' : 'border border-app-border'
+        }`}
+      >
+        <View className="flex-row items-start justify-between">
+          {/* Site Info */}
+          <View className="flex-1 mr-3">
+            <View className="flex-row items-center mb-2">
+              <Text className="text-lg font-semibold text-app-text-primary flex-1">
+                {item.name}
+              </Text>
+              {isCurrentSite && (
+                <View className="bg-app-primary rounded-full px-2 py-1 ml-2">
+                  <Text className="text-white text-xs font-medium">
+                    {t('current')}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {item.location && (
+              <Text className="text-sm text-app-text-secondary mb-1">
+                📍 {item.location}
+              </Text>
+            )}
+
+            {item.description && (
+              <Text className="text-sm text-app-text-secondary mb-2" numberOfLines={2}>
+                {item.description}
+              </Text>
+            )}
+
+            <View className="flex-row items-center justify-between">
+              {/* Status */}
+              <View 
+                className="px-2 py-1 rounded-full flex-row items-center"
+                style={{ backgroundColor: statusConfig.backgroundColor }}
+              >
+                <Text style={{ color: statusConfig.color }} className="text-xs mr-1">
+                  {statusConfig.icon}
+                </Text>
+                <Text 
+                  style={{ color: statusConfig.color }} 
+                  className="text-xs font-medium"
+                >
+                  {t(`status.${item?.status}`)}
+                </Text>
+              </View>
+
+              {/* Members count */}
+              <Text className="text-xs text-app-text-tertiary">
+                {t('membersCount', { 
+                  count: (item.members?.length || 0) + (item.managers?.length || 0) 
+                })}
+              </Text>
+            </View>
+          </View>
+
+          {/* Selection indicator */}
+          <View className="items-center justify-center">
+            {isSelecting ? (
+              <ActivityIndicator size="small" color="#4CAF50" />
+            ) : (
+              <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${
+                isCurrentSite 
+                  ? 'bg-app-primary border-app-primary' 
+                  : 'border-app-border'
+              }`}>
+                {isCurrentSite && (
+                  <Text className="text-white text-xs font-bold">✓</Text>
+                )}
+              </View>
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
     );
   };
 
   const renderEmptyState = () => (
-    <View className="justify-center items-center py-20">
-      {sitesListError ? (
-        <View className="items-center">
-          <Text className="text-red-500 text-base text-center mb-4">
-            {sitesListError}
-          </Text>
-          <TouchableOpacity
-            onPress={handleRefresh}
-            className="bg-app-primary px-4 py-2 rounded-lg"
-          >
-            <Text className="text-white font-medium">{t("retry")}</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <Text className="text-app-text-secondary text-base text-center">
-          {sitesSearchQuery ? t("noSitesFound") : t("noSitesAvailable")}
-        </Text>
-      )}
+    <View className="flex-1 justify-center items-center px-4 py-20">
+      <Text className="text-4xl mb-4">🏗️</Text>
+      <Text className="text-lg font-medium text-app-text-primary mb-2 text-center">
+        {t('noSites')}
+      </Text>
+      <Text className="text-sm text-app-text-secondary text-center mb-4">
+        {t('noSitesDescription')}
+      </Text>
+      <TouchableOpacity 
+        onPress={handleRefresh}
+        className="bg-app-primary px-6 py-3 rounded-lg"
+      >
+        <Text className="text-white font-medium">{t('refresh')}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderErrorState = () => (
+    <View className="flex-1 justify-center items-center px-4 py-20">
+      <Text className="text-4xl mb-4">❌</Text>
+      <Text className="text-lg font-medium text-app-text-primary mb-2 text-center">
+        {t('errorTitle')}
+      </Text>
+      <Text className="text-sm text-app-text-secondary text-center mb-4">
+        {error || t('errorDescription')}
+      </Text>
+      <TouchableOpacity 
+        onPress={handleRefresh}
+        className="bg-app-primary px-6 py-3 rounded-lg"
+      >
+        <Text className="text-white font-medium">{t('tryAgain')}</Text>
+      </TouchableOpacity>
     </View>
   );
 
   const renderLoadingState = () => (
     <View className="flex-1 justify-center items-center">
-      <ActivityIndicator size="large" color="#3B82F6" />
-      <Text className="text-app-text-secondary text-sm mt-4">
-        {t("loading")}
-      </Text>
+      <ActivityIndicator size="large" color="#4CAF50" />
+      <Text className="text-app-text-secondary mt-4">{t('loading')}</Text>
     </View>
   );
-
-  // Show loading state on initial load
-  if (isLoadingSitesList && sitesList.length === 0) {
-    return (
-      <View className="flex-1 bg-app-background">
-        <StatusBar barStyle="dark-content" backgroundColor="white" />
-
-        {/* Header */}
-        <View className="px-4 pt-12 pb-4 border-b border-app-border">
-          <Text className="text-xl font-semibold text-center text-app-text-primary">
-            {t("selectSite")}
-          </Text>
-          <Text className="text-sm text-app-text-secondary text-center mt-2">
-            {t("chooseSiteToManage")}
-          </Text>
-        </View>
-
-        {renderLoadingState()}
-      </View>
-    );
-  }
 
   return (
     <View className="flex-1 bg-app-background">
       <StatusBar barStyle="dark-content" backgroundColor="white" />
-
+      
       {/* Header */}
-      <View className="px-4 pt-12 pb-4 border-b border-app-border">
-        <Text className="text-xl font-semibold text-center text-app-text-primary">
-          {t("selectSite")}
+      <View className="px-4 pt-12 pb-4 flex-row items-center border-b border-app-border bg-app-background">
+        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <Text className="text-2xl text-app-text-primary">←</Text>
+        </TouchableOpacity>
+        <Text className="text-xl font-semibold text-center flex-1 mr-8 text-app-text-primary">
+          {t('title')}
         </Text>
-        <Text className="text-sm text-app-text-secondary text-center mt-2">
-          {t("chooseSiteToManage")}
-        </Text>
-
-        {/* Total sites count */}
-        {sitesListPagination.count > 0 && (
-          <Text className="text-xs text-app-text-tertiary text-center mt-1">
-            {sitesListPagination.count} {t("sitesAvailable")}
-          </Text>
-        )}
       </View>
 
-      {/* Sites List */}
-      <FlatList
-        data={sitesList}
-        renderItem={renderSiteItem}
-        keyExtractor={(item, index) => item.name + index}
-        contentContainerStyle={{
-          padding: 16,
-          paddingBottom: sitesListPagination.hasMore ? 80 : 16,
-        }}
-        ListHeaderComponent={renderHeader}
-        ListFooterComponent={renderFooter}
-        ListEmptyComponent={renderEmptyState}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshingSites}
-            onRefresh={handleRefresh}
-            colors={["#3B82F6"]}
-            tintColor="#3B82F6"
-            title={t("pullToRefresh")}
-            titleColor="#6B7280"
-          />
-        }
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={10}
-        windowSize={10}
-      />
+      {/* Content */}
+      {isLoading ? (
+        renderLoadingState()
+      ) : error ? (
+        renderErrorState()
+      ) : sites.length === 0 ? (
+        renderEmptyState()
+      ) : (
+        <FlatList
+          data={sites}
+          renderItem={renderSiteItem}
+          keyExtractor={(item) => item.id.toString()}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingTop: 16, paddingBottom: 32 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={handleRefresh}
+              tintColor="#4CAF50"
+              colors={["#4CAF50"]}
+            />
+          }
+        />
+      )}
+
+      {/* Error Message for Site Selection */}
+      {selectError && (
+        <View className="bg-app-danger-light border border-app-danger m-4 p-3 rounded-lg">
+          <Text className="text-app-danger text-sm font-medium text-center">
+            {selectError}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }

@@ -1,0 +1,30 @@
+{
+  "en": {
+    "workersManagement": "Workers Management",
+    "backToSiteSelection": "← Back to Site Selection",
+    "selectSite": "Select Site",
+    "switchSite": "Switch Site",
+    "currentSite": "Current Site",
+    "loadingSites": "Loading sites...",
+    "failedToLoadSites": "Failed to load sites",
+    "errorLoadingSites": "Error loading sites",
+    "failedToLoadSiteDetails": "Failed to load site details",
+    "errorLoadingSiteDetails": "Error loading site details",
+    "error": "Error",
+    "retry": "Retry"
+  },
+  "sw": {
+    "workersManagement": "Usimamizi wa Wafanyakazi",
+    "backToSiteSelection": "← Rudi Chaguo la Eneo",
+    "selectSite": "Chagua Eneo",
+    "switchSite": "Badilisha Eneo",
+    "currentSite": "Eneo la Sasa",
+    "loadingSites": "Inapakia maeneo...",
+    "failedToLoadSites": "Imeshindwa kupakia maeneo",
+    "errorLoadingSites": "Hitilafu katika kupakia maeneo",
+    "failedToLoadSiteDetails": "Imeshindwa kupakia maelezo ya eneo",
+    "errorLoadingSiteDetails": "Hitilafu katika kupakia maelezo ya eneo",
+    "error": "Hitilafu",
+    "retry": "Jaribu tena"
+  }
+}
