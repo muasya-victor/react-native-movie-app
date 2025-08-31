@@ -50,15 +50,20 @@ export default function TabsLayout() {
     if (userType === "SiteManager") {
       return [
         ...baseTabs,
-        {
-          name: "workers",
-          title: "Workers",
-          icon: "people-outline",
-        },
+        // {
+        //   name: "workers",
+        //   title: "Workers",
+        //   icon: "people-outline",
+        // },
         {
           name: "payments",
           title: "Payments",
           icon: "cash-outline",
+        },
+        {
+          name: "place-order",
+          title: "Place Order",
+          icon: "fast-food-outline",
         },
         {
           name: "attendance",
