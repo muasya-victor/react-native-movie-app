@@ -396,6 +396,9 @@ class SiteService {
     try {
       const siteResponse = await this.getCurrentSite();
 
+      console.log('getting current', siteResponse);
+      
+
       if (!siteResponse.success || !siteResponse.data) {
         return {
           success: false,

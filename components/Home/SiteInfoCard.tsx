@@ -1,5 +1,5 @@
 // components/SiteInfoCard.tsx
-import React, { useEffect } from "react";
+import React from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { useSiteStore } from "../../store/siteStore";
 
@@ -31,19 +31,19 @@ export const SiteInfoCard: React.FC<SiteInfoCardProps> = ({
     retry: "Retry",
   },
 }) => {
-  const { selectedSite, fetchCurrentSite, isLoadingSite, siteError } =
+  const { selectedSite, isLoadingSite, siteError } =
     useSiteStore();
 
-  useEffect(() => {
-    // Only fetch if there's no selected site, not loading, AND no existing site error
-    if (!selectedSite && !isLoadingSite && !siteError) {
-      fetchCurrentSite();
-    }
-  }, [selectedSite, isLoadingSite, siteError, fetchCurrentSite]); // Added siteError to dependency array
+  // useEffect(() => {
+  //   // Only fetch if there's no selected site, not loading, AND no existing site error
+  //   if (!selectedSite && !isLoadingSite && !siteError) {
+  //     fetchCurrentSite();
+  //   }
+  // }, [selectedSite, isLoadingSite, siteError]); // Added siteError to dependency array
 
-  const refetchSite = () => {
-    fetchCurrentSite(true); // Force refresh
-  };
+  // const refetchSite = () => {
+  //   fetchCurrentSite(true); // Force refresh
+  // };
 
   const hasNoSiteAssigned = !selectedSite && !isLoadingSite && siteError;
   const isNoSiteError =

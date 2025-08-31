@@ -38,11 +38,6 @@ export default function TabsLayout() {
           title: "Menu",
           icon: "wine-outline",
         },
-        {
-          name: "settings",
-          title: "Settings",
-          icon: "settings-outline",
-        },
         ...profile,
       ];
     }

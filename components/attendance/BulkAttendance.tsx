@@ -14,7 +14,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Image,
   Modal,
   Platform,
   RefreshControl,
@@ -27,9 +26,12 @@ import {
 } from "react-native";
 import Toast from "react-native-toast-message";
 
+import SiteSelectorComponent from "@/components/SiteSelector/SiteSelector";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useAttendanceStore, User } from "../../store/attendanceStore";
-import { useSiteStore } from "../../store/siteStore";
+import { AttendanceService } from "@/services/attendanceService";
+import { siteService, Worker } from "@/services/siteService";
+import useFetch from "@/services/useFetch";
+import { useSiteStore } from "@/store/siteStore";
 import translations from "./translations.json";
 
 const CalendarPicker = ({
@@ -189,47 +191,37 @@ const CalendarPicker = ({
   );
 };
 
-interface BulkAttendanceProps {
-  siteId?: number;
+interface SelectedUser {
+  user_id: number;
+  user_name: string;
+  is_present: boolean;
 }
 
-export default function BulkAttendance({ siteId }: BulkAttendanceProps) {
+interface AttendanceRecord {
+  user_id: number;
+  is_present: boolean;
+  user_name?: string;
+  date?: string;
+}
+
+interface BulkAttendanceProps {}
+
+export default function BulkAttendance({}: BulkAttendanceProps) {
   const router = useRouter();
   const { t } = useTranslation(translations);
-  const {
-    selectedSite,
-    isLoadingSite,
-    siteError,
-    fetchCurrentSite,
-    getActiveWorkers,
-  } = useSiteStore();
-  const {
-    isLoading,
-    isSubmitting,
-    selectedDate,
-    attendanceRecords,
-    selectedUsers,
-    error,
-    validationErrors,
-    successMessage,
-    setSite,
-    setDate,
-    toggleUserSelection,
-    toggleSelectedUserAttendance,
-    removeUserFromSelection,
-    selectAllUsers,
-    markAllSelectedPresent,
-    markAllSelectedAbsent,
-    clearSelectedUsers,
-    clearError,
-    clearSuccess,
-    fetchAttendanceForDate,
-    submitBulkAttendance,
-  } = useAttendanceStore();
+  const { selectedSite, setSelectedSite } = useSiteStore();
 
-  const [refreshing, setRefreshing] = useState(false);
+  // State management
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
+  const [selectedUsers, setSelectedUsers] = useState<SelectedUser[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
+  const [attendanceError, setAttendanceError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [sectionsExpanded, setSectionsExpanded] = useState({
     dateSelection: true,
     summary: true,
@@ -237,54 +229,173 @@ export default function BulkAttendance({ siteId }: BulkAttendanceProps) {
     membersList: true,
   });
 
-  const activeWorkers = getActiveWorkers();
-  const currentSiteId = siteId || selectedSite?.id;
-  const currentSiteName = selectedSite?.name || `Site ${currentSiteId}`;
+  // Fetch all sites for site selector
+  const {
+    data: sitesResponse,
+    loading: sitesLoading,
+    error: sitesError,
+    refetch: refetchSites,
+  } = useFetch(
+    async () => {
+      return await siteService.getSites();
+    },
+    true
+  );
 
-  // Initialize site and fetch data
-  useEffect(() => {
-    if (currentSiteId) {
-      setSite(currentSiteId);
-      if (!selectedSite || selectedSite.id !== currentSiteId) {
-        fetchCurrentSite(true);
+  const sites = sitesResponse?.data || [];
+
+  // Fetch site workers using the siteService
+  const {
+    data: workersResponse,
+    loading: workersLoading,
+    error: workersError,
+    refetch: refetchWorkers,
+  } = useFetch(
+    async () => {
+      if (!selectedSite?.id) {
+        throw new Error("No site selected");
       }
-    }
-  }, [currentSiteId, setSite, fetchCurrentSite]);
+      return await siteService.getWorkers();
+    },
+    !!selectedSite?.id
+  );
 
-  // Fetch attendance when site or date changes
+  const workers = selectedSite?.members || [];
+
+  console.log('wokerssss----',workersResponse);
+  
+
+  // Handle site selection from site selector
+  const handleSiteSelect = (site: any) => {
+    setSelectedSite(site);
+    // Clear selected users and attendance records when site changes
+    setSelectedUsers([]);
+    setAttendanceRecords([]);
+    // setAttendanceError(null);
+    setSuccessMessage(null);
+  };
+
+  // Fetch attendance records when site or date changes
   useEffect(() => {
-    if (currentSiteId && selectedDate) {
-      setInitialLoadComplete(false);
-      fetchAttendanceForDate(currentSiteId, selectedDate).then(() => {
-        setInitialLoadComplete(true);
-      });
+    if (selectedSite?.id && selectedDate) {
+      fetchAttendanceForDate();
     }
-  }, [currentSiteId, selectedDate, fetchAttendanceForDate]);
+  }, [selectedSite?.id, selectedDate]);
 
   // Auto-clear success message
   useEffect(() => {
     if (successMessage) {
-      const timer = setTimeout(() => clearSuccess(), 5000);
+      const timer = setTimeout(() => setSuccessMessage(null), 5000);
       return () => clearTimeout(timer);
     }
-  }, [successMessage, clearSuccess]);
+  }, [successMessage]);
 
-  const handleRefresh = async () => {
-    if (!currentSiteId) return;
-    setRefreshing(true);
+  console.log('|||||||||||||||||||| my selected site',selectedSite);
+  
+
+  const fetchAttendanceForDate = async () => {
+    if (!selectedSite?.id) return;
+
+    setAttendanceLoading(true);
+    setAttendanceError(null);
+    
     try {
-      clearError();
-      await fetchCurrentSite(true);
-      await fetchAttendanceForDate(currentSiteId, selectedDate);
-    } catch (err) {
-      console.error("Failed to refresh site data:", err);
+      const response = await AttendanceService.fetchAttendanceForDate(
+        selectedSite.id,
+        selectedDate
+      );
+      
+      if (response.success) {
+        setAttendanceRecords(response.data || []);
+      } else {
+        const errorMessage = typeof response.error === 'string' 
+          ? response.error 
+          : response.error?.message || "Failed to fetch attendance";
+        setAttendanceError(errorMessage);
+        setAttendanceRecords([]);
+      }
+    } catch (error) {
+      console.error("Error fetching attendance:", error);
+      setAttendanceError("Failed to fetch attendance records");
+      setAttendanceRecords([]);
     } finally {
-      setRefreshing(false);
+      setAttendanceLoading(false);
     }
   };
 
+  const handleRefresh = async () => {
+    setAttendanceError(null);
+    await Promise.all([
+      // refetchWorkers(),
+      fetchAttendanceForDate(),
+    ]);
+  };
+
+  const toggleUserSelection = (worker: Worker) => {
+    const userId = worker.id;
+    const isSelected = selectedUsers.some((user) => user.user_id === userId);
+
+    if (isSelected) {
+      setSelectedUsers(prev => prev.filter(user => user.user_id !== userId));
+    } else {
+      const existingRecord = attendanceRecords.find(record => record.user_id === userId);
+      const defaultPresent = existingRecord ? existingRecord.is_present : true;
+      
+      setSelectedUsers(prev => [
+        ...prev,
+        {
+          user_id: userId,
+          user_name: worker.name,
+          is_present: defaultPresent,
+        }
+      ]);
+    }
+  };
+
+  const toggleSelectedUserAttendance = (userId: number) => {
+    setSelectedUsers(prev =>
+      prev.map(user =>
+        user.user_id === userId
+          ? { ...user, is_present: !user.is_present }
+          : user
+      )
+    );
+  };
+
+  const removeUserFromSelection = (userId: number) => {
+    setSelectedUsers(prev => prev.filter(user => user.user_id !== userId));
+  };
+
+  const selectAllUsers = (availableWorkers: Worker[]) => {
+    const newSelectedUsers: SelectedUser[] = availableWorkers.map(worker => {
+      const existingRecord = attendanceRecords.find(record => record.user_id === worker.id);
+      return {
+        user_id: worker.id,
+        user_name: worker.name,
+        is_present: existingRecord ? existingRecord.is_present : true,
+      };
+    });
+    setSelectedUsers(newSelectedUsers);
+  };
+
+  const markAllSelectedPresent = () => {
+    setSelectedUsers(prev =>
+      prev.map(user => ({ ...user, is_present: true }))
+    );
+  };
+
+  const markAllSelectedAbsent = () => {
+    setSelectedUsers(prev =>
+      prev.map(user => ({ ...user, is_present: false }))
+    );
+  };
+
+  const clearSelectedUsers = () => {
+    setSelectedUsers([]);
+  };
+
   const handleSubmit = async () => {
-    if (!currentSiteId) {
+    if (!selectedSite?.id) {
       Alert.alert(t("error"), t("noSiteSelected"));
       return;
     }
@@ -294,7 +405,47 @@ export default function BulkAttendance({ siteId }: BulkAttendanceProps) {
       return;
     }
 
-    await submitBulkAttendance();
+    setIsSubmitting(true);
+    try {
+      const attendanceData = selectedUsers.map(user => ({
+        user_id: user.user_id,
+        is_present: user.is_present,
+      }));
+
+      const payload = AttendanceService.formatBulkAttendancePayload(
+        selectedSite.id,
+        selectedDate,
+        attendanceData
+      );
+
+      // Validate payload
+      const validation = AttendanceService.validateBulkAttendancePayload(payload);
+      if (!validation.isValid) {
+        Alert.alert(t("error"), validation.errors.join("\n"));
+        return;
+      }
+
+      const response = await AttendanceService.markBulkAttendance(payload);
+
+      if (response.success) {
+        setSuccessMessage(
+          `Attendance marked successfully for ${selectedUsers.length} users on ${formatDisplayDate(selectedDate)}`
+        );
+        setSelectedUsers([]);
+        await fetchAttendanceForDate(); // Refresh attendance records
+        showToast("Attendance submitted successfully!");
+      } else {
+        const errorMessage = typeof response.error === 'string' 
+          ? response.error 
+          : response.error?.message || "Failed to submit attendance";
+        Alert.alert(t("error"), errorMessage);
+      }
+    } catch (error) {
+      console.error("Error submitting attendance:", error);
+      Alert.alert(t("error"), "Failed to submit attendance. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const toggleSection = (section: keyof typeof sectionsExpanded) =>
@@ -368,7 +519,7 @@ export default function BulkAttendance({ siteId }: BulkAttendanceProps) {
         <View>
           <View className="flex-row gap-2 mb-4">
             <TouchableOpacity
-              onPress={() => setDate(getDateHelper("today"))}
+              onPress={() => setSelectedDate(getDateHelper("today"))}
               className={`px-4 py-2 rounded-lg border ${
                 selectedDate === getDateHelper("today")
                   ? "bg-app-primary border-app-primary"
@@ -386,7 +537,7 @@ export default function BulkAttendance({ siteId }: BulkAttendanceProps) {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => setDate(getDateHelper("yesterday"))}
+              onPress={() => setSelectedDate(getDateHelper("yesterday"))}
               className={`px-4 py-2 rounded-lg border ${
                 selectedDate === getDateHelper("yesterday")
                   ? "bg-app-primary border-app-primary"
@@ -510,7 +661,7 @@ export default function BulkAttendance({ siteId }: BulkAttendanceProps) {
             {/* No data message */}
             {attendanceRecords.length === 0 &&
               selectedUsers.length === 0 &&
-              initialLoadComplete && (
+              !attendanceLoading && (
                 <View className="bg-app-surface-variant rounded-lg p-4 items-center">
                   <ClipboardList size={24} color="#757575" className="mb-2" />
                   <Text className="text-app-text-secondary text-center">
@@ -540,7 +691,7 @@ export default function BulkAttendance({ siteId }: BulkAttendanceProps) {
         )}
         {sectionsExpanded.selectedList && (
           <View className="bg-app-surface rounded-lg p-4">
-            <View className="flex-row gap-2 mb-4 hidden">
+            <View className="flex-row gap-2 mb-4">
               <TouchableOpacity
                 onPress={() => {
                   markAllSelectedPresent();
@@ -652,85 +803,41 @@ export default function BulkAttendance({ siteId }: BulkAttendanceProps) {
     );
   };
 
-  const renderUserItem = ({ item: worker }: { item: User }) => {
+  const renderUserItem = ({ item: worker }: { item: Worker }) => {
     const isSelected = isUserSelected(worker.id);
     const existingStatus = getUserExistingAttendance(worker.id);
 
-    // Check if user has amount_accrued greater than 0
-    const amountAccrued = parseFloat(worker.amount_accrued || "0");
-    const isBlocked = amountAccrued > 0;
-
     return (
       <TouchableOpacity
-        onPress={() => {
-          if (isBlocked) {
-            Alert.alert(
-              "Cannot Modify Attendance",
-              `${worker.name} has pending accrued amount of ${worker.amount_accrued}. Attendance cannot be modified until this is resolved.`,
-              [{ text: "OK" }]
-            );
-            return;
-          }
-          toggleUserSelection(worker);
-        }}
+        onPress={() => toggleUserSelection(worker)}
         className={`p-4 rounded-lg mb-3 flex-row items-center shadow-sm ${
-          isBlocked
-            ? "bg-gray-100 opacity-60"
-            : isSelected
+          isSelected
             ? "bg-app-primary-light border border-app-primary"
             : "bg-app-surface"
         }`}
       >
-        {worker.image ? (
-          <Image
-            source={{ uri: worker.image }}
-            className="w-10 h-10 rounded-full mr-3"
-            resizeMode="cover"
-          />
-        ) : (
-          <View
-            className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-              isBlocked ? "bg-gray-300" : "bg-app-surface-variant"
-            }`}
-          >
-            <Text
-              className={`font-bold text-lg ${
-                isBlocked ? "text-gray-500" : "text-app-primary"
-              }`}
-            >
-              {worker.name.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-        )}
-        <View className="flex-1">
-          <Text
-            className={`text-base font-medium ${
-              isBlocked ? "text-gray-500" : "text-app-text-primary"
-            }`}
-          >
+        <View className="w-10 h-10 rounded-full items-center justify-center mr-3 bg-app-surface-variant">
+          <Text className="font-bold text-lg text-app-primary">
             {worker.name}
           </Text>
-          {worker.staffNumber && (
-            <Text
-              className={`text-sm ${
-                isBlocked ? "text-gray-400" : "text-app-text-secondary"
-              }`}
-            >
-              {worker.staffNumber}
+        </View>
+        <View className="flex-1">
+          <Text className="text-base font-medium text-app-text-primary flext items-center gap-2">
+            {worker?.user.first_name}
+            -
+            {worker?.user.last_name}
+          </Text>
+          {worker.staff_number && (
+            <Text className="text-sm text-app-text-secondary">
+              {worker?.user.staff_number}
             </Text>
           )}
-
-          {/* Show blocked status */}
-          {isBlocked && (
-            <View className="mt-1 bg-yellow-100 px-2 py-1 rounded">
-              <Text className="text-yellow-800 text-xs font-medium">
-                Blocked: Accrued amount ${worker.amount_accrued}
-              </Text>
-            </View>
-          )}
+          <Text className="text-xs text-app-text-tertiary mt-1">
+            {worker?.user.role}
+          </Text>
 
           {/* Show existing attendance status */}
-          {!isBlocked && existingStatus !== null && (
+          {existingStatus !== null && (
             <Text
               className={`text-sm mt-1 font-semibold ${
                 existingStatus ? "text-green-600" : "text-red-600"
@@ -746,101 +853,99 @@ export default function BulkAttendance({ siteId }: BulkAttendanceProps) {
         {/* Selection indicator */}
         <View
           className={`w-6 h-6 rounded-full border-2 justify-center items-center ${
-            isBlocked
-              ? "border-gray-400 bg-gray-200"
-              : isSelected
+            isSelected
               ? "bg-app-primary border-app-primary"
               : "border-app-border"
           }`}
         >
-          {isSelected && !isBlocked && (
+          {isSelected && (
             <Text className="text-white text-xs">✓</Text>
           )}
-          {isBlocked && <Text className="text-gray-500 text-xs">✕</Text>}
         </View>
       </TouchableOpacity>
     );
   };
 
   const renderMembersList = () => {
-    // Filter out users with amount_accrued > 0
-    const selectableWorkers = activeWorkers.filter((worker) => {
-      const amountAccrued = parseFloat(worker.amount_accrued || "0");
-      return amountAccrued === 0;
-    });
-
-    const blockedWorkers = activeWorkers.filter((worker) => {
-      const amountAccrued = parseFloat(worker.amount_accrued || "0");
-      return amountAccrued > 0;
-    });
-
     return (
       <View className="mb-6">
         <View className="flex-row items-center justify-between">
           {renderSectionHeader(
             t("selectMembers") || "Select Members",
             "membersList",
-            activeWorkers.length
+            workers.length
           )}
-          {selectableWorkers.length > 0 && (
+          {workers.length > 0 && (
             <TouchableOpacity
               onPress={() => {
-                selectAllUsers(selectableWorkers);
+                selectAllUsers(workers);
                 showToast(
-                  `${selectableWorkers.length} available users selected`
+                  `${workers.length} users selected`
                 );
               }}
               className="mb-3 py-2 px-3 bg-app-surface-variant rounded-lg"
             >
               <Text className="text-app-text-secondary font-medium">
-                {t("selectAll") || "Select All"} ({selectableWorkers.length})
+                {t("selectAll") || "Select All"} ({workers.length})
               </Text>
             </TouchableOpacity>
           )}
         </View>
         {sectionsExpanded.membersList && (
           <>
-            {isLoadingSite || (isLoading && !initialLoadComplete) ? (
+            {workersLoading || attendanceLoading ? (
               <View className="py-8 items-center">
                 <ActivityIndicator size="large" color="#4CAF50" />
                 <Text className="text-app-text-secondary mt-2">
-                  Loading users...
+                  {workersLoading ? "Loading workers..." : "Loading attendance..."}
                 </Text>
               </View>
-            ) : siteError ? (
+            ) : workersError ? (
               <View className="py-8 items-center">
                 <Text className="text-app-danger text-center mb-4">
-                  {siteError}
+                  {workersError.message || "Failed to load workers"}
                 </Text>
                 <TouchableOpacity
-                  onPress={() => fetchCurrentSite(true)}
+                  onPress={refetchWorkers}
                   className="bg-app-primary px-4 py-2 rounded-lg"
                 >
                   <Text className="text-white font-medium">Retry</Text>
                 </TouchableOpacity>
               </View>
-            ) : activeWorkers.length === 0 ? (
+            ) : workers.length === 0 ? (
               <View className="py-8 items-center">
                 <Text className="text-app-text-secondary text-center">
-                  {t("noUsersFound") || "No users found"}
+                  {t("noUsersFound") || "No workers found for this site"}
                 </Text>
+                <TouchableOpacity
+                  onPress={handleRefresh}
+                  className="mt-4 bg-app-primary px-4 py-2 rounded-lg"
+                >
+                  <Text className="text-white font-medium">Refresh</Text>
+                </TouchableOpacity>
               </View>
             ) : (
               <>
-                {blockedWorkers.length > 0 && (
-                  <View className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <Text className="text-yellow-800 font-medium text-sm mb-1">
-                      Notice: {blockedWorkers.length} user(s) blocked from
-                      attendance modification
+                {attendanceError && (
+                  <View className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <Text className="text-red-800 font-medium text-sm mb-1">
+                      Error loading attendance data
                     </Text>
-                    <Text className="text-yellow-700 text-xs">
-                      Users with pending accrued amounts cannot have their
-                      attendance modified.
+                    <Text className="text-red-700 text-xs">
+                      {attendanceError}
                     </Text>
+                    <TouchableOpacity
+                      onPress={fetchAttendanceForDate}
+                      className="mt-2 self-start"
+                    >
+                      <Text className="text-red-800 underline text-sm">
+                        Retry
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 )}
                 <FlatList
-                  data={activeWorkers}
+                  data={workers}
                   renderItem={renderUserItem}
                   keyExtractor={(item) => item.id.toString()}
                   scrollEnabled={false}
@@ -853,21 +958,16 @@ export default function BulkAttendance({ siteId }: BulkAttendanceProps) {
     );
   };
 
-  if (!currentSiteId) {
+  // Show site selector if no site is selected
+  if (!selectedSite) {
     return (
-      <View className="flex-1 bg-app-background items-center justify-center p-4">
-        <Text className="text-app-text-secondary text-center text-lg mb-4">
-          {t("noSiteSelected") || "No site selected"}
-        </Text>
-        <TouchableOpacity
-          className="bg-app-primary px-6 py-3 rounded-lg"
-          onPress={() => router.back()}
-        >
-          <Text className="text-white font-medium">
-            {t("goBack") || "Go Back"}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <SiteSelectorComponent
+        sites={sites}
+        isLoading={sitesLoading}
+        error={sitesError?.message || null}
+        onSiteSelect={handleSiteSelect}
+        onRetry={refetchSites}
+      />
     );
   }
 
@@ -878,7 +978,7 @@ export default function BulkAttendance({ siteId }: BulkAttendanceProps) {
       {showCalendar && (
         <CalendarPicker
           selectedDate={selectedDate}
-          onDateSelect={setDate}
+          onDateSelect={setSelectedDate}
           onClose={() => setShowCalendar(false)}
         />
       )}
@@ -893,7 +993,7 @@ export default function BulkAttendance({ siteId }: BulkAttendanceProps) {
             {t("bulkAttendance") || "Bulk Attendance"}
           </Text>
           <Text className="text-sm text-app-text-secondary">
-            {currentSiteName}
+            {selectedSite.name}
           </Text>
         </View>
       </View>
@@ -908,19 +1008,17 @@ export default function BulkAttendance({ siteId }: BulkAttendanceProps) {
       )}
 
       {/* Error Banner */}
-      {(error || validationErrors.length > 0) && (
+      {(attendanceError || workersError) && !workersLoading && (
         <View className="m-4 p-4 bg-red-100 rounded-lg border border-red-400">
           <Text className="text-red-800 font-medium mb-2">
-            {error || t("validationErrors") || "Validation errors"}
+            {attendanceError || workersError?.message || "An error occurred"}
           </Text>
-          {validationErrors.map((err, i) => (
-            <Text key={i} className="text-red-700 text-sm">
-              • {err}
-            </Text>
-          ))}
-          <TouchableOpacity onPress={clearError} className="mt-2 self-start">
+          <TouchableOpacity 
+            onPress={handleRefresh} 
+            className="mt-2 self-start"
+          >
             <Text className="text-red-800 underline text-sm">
-              {t("dismiss") || "Dismiss"}
+              {t("retry") || "Retry"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -930,7 +1028,10 @@ export default function BulkAttendance({ siteId }: BulkAttendanceProps) {
       <ScrollView
         className="flex-1"
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          <RefreshControl 
+            refreshing={workersLoading || attendanceLoading} 
+            onRefresh={handleRefresh} 
+          />
         }
       >
         <View className="p-4">

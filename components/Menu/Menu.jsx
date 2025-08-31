@@ -166,12 +166,12 @@ export default function MenuComponent() {
             </Text>
           </View>
           
-          <TouchableOpacity 
+          {/* <TouchableOpacity 
             onPress={handleAddMenuItem}
             className="bg-app-primary px-4 py-2 rounded-lg"
           >
             <Text className="text-white font-medium">+ {t('addItem')}</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* Loading indicator */}
@@ -239,12 +239,12 @@ export default function MenuComponent() {
           </Text>
         </View>
         
-        <TouchableOpacity 
+        {/* <TouchableOpacity 
           onPress={handleAddMenuItem}
           className="bg-app-primary px-4 py-2 rounded-lg"
         >
           <Text className="text-white font-medium">+ {t('addItem')}</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Search Bar */}

@@ -40,7 +40,7 @@ export default function DisbursementSuccess() {
   };
 
   const handleGoHome = () => {
-    router.replace("/(tabs)/workers");
+    router.replace("/");
   };
 
   const handleViewTransactions = () => {
