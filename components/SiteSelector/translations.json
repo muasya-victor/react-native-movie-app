@@ -1,0 +1,28 @@
+{
+  "en": {
+    "selectSite": "Select Site",
+    "selectSiteDescription": "Choose a site to manage workers",
+    "loadingSites": "Loading sites...",
+    "error": "Error",
+    "retry": "Retry",
+    "refresh": "Refresh",
+    "noSitesFound": "No Sites Found",
+    "noSitesDescription": "No sites are available for selection",
+    "noSitesAvailable": "No sites available",
+    "members": "members",
+    "managers": "managers"
+  },
+  "sw": {
+    "selectSite": "Chagua Eneo",
+    "selectSiteDescription": "Chagua eneo ili kusimamia wafanyakazi",
+    "loadingSites": "Inapakia maeneo...",
+    "error": "Hitilafu",
+    "retry": "Jaribu tena",
+    "refresh": "Onyesha upya",
+    "noSitesFound": "Hakuna Maeneo Yaliyopatikana",
+    "noSitesDescription": "Hakuna maeneo yaliyopatikana kwa uchaguzi",
+    "noSitesAvailable": "Hakuna maeneo yaliyopatikana",
+    "members": "wanachama",
+    "managers": "wasimamizi"
+  }
+}

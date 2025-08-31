@@ -70,11 +70,6 @@ export default function TabsLayout() {
           title: "Attendance",
           icon: "calendar-outline",
         },
-        {
-          name: "sites",
-          title: "Sites",
-          icon: "business-outline",
-        },
         ...profile,
       ];
     }

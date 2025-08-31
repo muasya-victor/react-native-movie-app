@@ -1,4 +1,3 @@
-// services/siteService.ts
 import { apiRequest } from "./api";
 import translations from "./translations.json";
 
@@ -34,31 +33,6 @@ interface Site {
   created_at: string;
   members: SiteMember[];
   managers: SiteManager[];
-}
-
-// Interface for sites list endpoint
-interface SiteListItem {
-  name: string;
-  location: string;
-  daily_wage_rate: string;
-  auto_execute_accruals: boolean;
-  image: string | null;
-  loan_interest_rate: number;
-  created_at: string;
-  members_count: string;
-  managers_count: string;
-}
-
-interface SiteListResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: SiteListItem[];
-}
-
-interface SiteOption {
-  key: number;
-  value: string;
 }
 
 interface Worker {
@@ -109,12 +83,6 @@ interface SiteServiceResponse<T = any> {
   };
 }
 
-interface SiteListParams {
-  page?: number;
-  search?: string;
-  limit?: number;
-}
-
 // Translation helper
 const getErrorMessage = (key: string, defaultMessage: string, currentLanguage: string = "en"): string => {
   return (
@@ -150,12 +118,48 @@ class SiteService {
     return getErrorMessage(key, defaultMessage, this.currentLanguage);
   }
 
+  async getSites(): Promise<SiteServiceResponse<Site[]>> {
+    try {
+      const response = await apiRequest('GET', '/sites');
+
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: response.data,
+        };
+      } else {
+        return {
+          success: false,
+          error: {
+            message: response.error?.message || this.getTranslatedError(
+              "failedToFetchSite",
+              "Failed to fetch sites"
+            )
+          },
+          data: null
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching sites:', error);
+      return {
+        success: false,
+        error: {
+          message: this.getTranslatedError(
+            "failedToFetchSite",
+            "Failed to fetch site data"
+          )
+        },
+        data: null
+      };
+    }
+  }
+
   /**
    * Fetch the current site data
    */
   async getCurrentSite(): Promise<SiteServiceResponse<Site>> {
     try {
-      const response = await apiRequest("GET", "/sites/current-site/");
+      const response = await apiRequest("GET", "/sites/current-site");
 
       if (response.success) {
         return {
@@ -248,179 +252,9 @@ class SiteService {
   }
 
   /**
-   * Fetch all sites with pagination and search
-   */
-  async getSites(params: SiteListParams = {}): Promise<SiteServiceResponse<SiteListResponse>> {
-    try {
-      // Build query parameters
-      const queryParams = new URLSearchParams();
-      
-      if (params.page && params.page > 1) {
-        queryParams.append('page', params.page.toString());
-      }
-      
-      if (params.search && params.search.trim()) {
-        queryParams.append('search', params.search.trim());
-      }
-      
-      if (params.limit) {
-        queryParams.append('limit', params.limit.toString());
-      }
-
-      const endpoint = `/sites${queryParams.toString() ? `?${queryParams.toString()}` : ''}/`;
-      const response = await apiRequest("GET", endpoint);
-
-      if (response.success) {
-        return {
-          success: true,
-          data: response.data,
-        };
-      }
-
-      return {
-        success: false,
-        error: {
-          message: this.getTranslatedError(
-            "failedToFetchSites",
-            "Failed to fetch sites data"
-          ),
-          originalError: response.error,
-        },
-      };
-    } catch (error: any) {
-      console.error("Error fetching sites:", error);
-
-      // Determine error type for better messaging
-      let errorKey = "unexpectedError";
-      let errorMessage = this.getTranslatedError(
-        "unexpectedError",
-        "An unexpected error occurred"
-      );
-
-      if (
-        error?.code === "NETWORK_ERROR" ||
-        error?.message?.includes("Network")
-      ) {
-        errorKey = "networkError";
-        errorMessage = this.getTranslatedError(
-          "networkError",
-          "Network connection error"
-        );
-      } else if (error?.response?.status === 401) {
-        errorKey = "authenticationFailed";
-        errorMessage = this.getTranslatedError(
-          "authenticationFailed",
-          "Authentication failed - please login again"
-        );
-      } else if (error?.response?.status === 403) {
-        errorKey = "accessDenied";
-        errorMessage = this.getTranslatedError(
-          "accessDenied",
-          "Access denied - insufficient permissions"
-        );
-      } else if (error?.response?.status >= 500) {
-        errorKey = "serverError";
-        errorMessage = this.getTranslatedError(
-          "serverError",
-          "Server error occurred"
-        );
-      } else if (error?.response?.status === 429) {
-        errorKey = "rateLimitExceeded";
-        errorMessage = this.getTranslatedError(
-          "rateLimitExceeded",
-          "Too many requests - please wait"
-        );
-      }
-
-      return {
-        success: false,
-        error: {
-          message: errorMessage,
-          key: errorKey,
-          originalError: error,
-        },
-      };
-    }
-  }
-
-  /**
-   * Fetch site options for dropdowns/selections
-   */
-  async getSiteOptions(): Promise<SiteServiceResponse<SiteOption[]>> {
-    try {
-      const response = await apiRequest("GET", "/sites/options");
-
-      if (response.success) {
-        return {
-          success: true,
-          data: response.data,
-        };
-      }
-
-      return {
-        success: false,
-        error: {
-          message: this.getTranslatedError(
-            "failedToFetchSiteOptions",
-            "Failed to fetch site options"
-          ),
-          originalError: response.error,
-        },
-      };
-    } catch (error: any) {
-      console.error("Error fetching site options:", error);
-
-      // Determine error type for better messaging
-      let errorKey = "unexpectedError";
-      let errorMessage = this.getTranslatedError(
-        "unexpectedError",
-        "An unexpected error occurred"
-      );
-
-      if (
-        error?.code === "NETWORK_ERROR" ||
-        error?.message?.includes("Network")
-      ) {
-        errorKey = "networkError";
-        errorMessage = this.getTranslatedError(
-          "networkError",
-          "Network connection error"
-        );
-      } else if (error?.response?.status === 401) {
-        errorKey = "authenticationFailed";
-        errorMessage = this.getTranslatedError(
-          "authenticationFailed",
-          "Authentication failed - please login again"
-        );
-      } else if (error?.response?.status === 403) {
-        errorKey = "accessDenied";
-        errorMessage = this.getTranslatedError(
-          "accessDenied",
-          "Access denied - insufficient permissions"
-        );
-      } else if (error?.response?.status >= 500) {
-        errorKey = "serverError";
-        errorMessage = this.getTranslatedError(
-          "serverError",
-          "Server error occurred"
-        );
-      }
-
-      return {
-        success: false,
-        error: {
-          message: errorMessage,
-          key: errorKey,
-          originalError: error,
-        },
-      };
-    }
-  }
-
-  /**
    * Add members to a specific site
    */
-  async addMembers(siteId: number, request: AddMembersRequest): Promise<SiteServiceResponse> {
+  async addMembers(siteId: number, request: AddMembersRequest): Promise<SiteServiceResponse>  {
     try {
       const response = await apiRequest("POST", `/sites/${siteId}/add-members/`, request);
 
@@ -630,25 +464,11 @@ class SiteService {
   }
 
   /**
-   * Validate site list item structure
-   */
-  validateSiteListItem(siteItem: SiteListItem): boolean {
-    if (!siteItem) return false;
-
-    const requiredFields: (keyof SiteListItem)[] = ["name", "location"];
-    return requiredFields.every(
-      (field) => siteItem[field] !== undefined && siteItem[field] !== null
-    );
-  }
-
-  /**
    * Get loading message for current operation
    */
   getLoadingMessage(operation: string): string {
     const loadingKeys: Record<string, string> = {
       fetchSite: "fetchingCurrentSite",
-      fetchSites: "fetchingSites",
-      fetchSiteOptions: "fetchingSiteOptions",
       loadWorkers: "loadingWorkers",
       processData: "processingData",
       retry: "retrying",
@@ -684,6 +504,9 @@ class SiteService {
     userIds: number[] = [],
     phoneNumbers: PhoneNumberInput[] = []
   ): AddMembersRequest {
+    console.log('ddsdsdsdsds',{user_ids: userIds,
+      phone_numbers: phoneNumbers});
+    
     return {
       user_ids: userIds,
       phone_numbers: phoneNumbers,
@@ -704,18 +527,100 @@ class SiteService {
   }
 
   /**
-   * Helper method to create site list params
+   * Fetch a specific site by ID with full details (members and managers)
    */
-  createSiteListParams(
-    page?: number,
-    search?: string,
-    limit?: number
-  ): SiteListParams {
-    return {
-      page,
-      search,
-      limit,
-    };
+  async getSiteById(siteId: number): Promise<SiteServiceResponse<Site>> {
+    try {
+      const response = await apiRequest("GET", `/sites/${siteId}`);
+
+      if (response.success) {
+        return {
+          success: true,
+          data: response.data,
+        };
+      }
+
+      return {
+        success: false,
+        error: {
+          message: this.getTranslatedError(
+            "failedToFetchSite",
+            "Failed to fetch site details"
+          ),
+          originalError: response.error,
+        },
+      };
+    } catch (error: any) {
+      console.error("Error fetching site by ID:", error);
+
+      // Determine error type for better messaging
+      let errorKey = "unexpectedError";
+      let errorMessage = this.getTranslatedError(
+        "unexpectedError",
+        "An unexpected error occurred"
+      );
+
+      if (
+        error?.code === "NETWORK_ERROR" ||
+        error?.message?.includes("Network")
+      ) {
+        errorKey = "networkError";
+        errorMessage = this.getTranslatedError(
+          "networkError",
+          "Network connection error"
+        );
+      } else if (
+        error?.code === "TIMEOUT" ||
+        error?.message?.includes("timeout")
+      ) {
+        errorKey = "connectionTimeout";
+        errorMessage = this.getTranslatedError(
+          "connectionTimeout",
+          "Connection timeout - please try again"
+        );
+      } else if (error?.response?.status === 401) {
+        errorKey = "authenticationFailed";
+        errorMessage = this.getTranslatedError(
+          "authenticationFailed",
+          "Authentication failed - please login again"
+        );
+      } else if (error?.response?.status === 403) {
+        errorKey = "accessDenied";
+        errorMessage = this.getTranslatedError(
+          "accessDenied",
+          "Access denied - insufficient permissions"
+        );
+      } else if (error?.response?.status === 404) {
+        errorKey = "siteNotFound";
+        errorMessage = this.getTranslatedError(
+          "siteNotFound",
+          "Site not found"
+        );
+      } else if (error?.response?.status >= 500) {
+        errorKey = "serverError";
+        errorMessage = this.getTranslatedError(
+          "serverError",
+          "Server error occurred"
+        );
+      } else if (error?.response?.status === 429) {
+        errorKey = "rateLimitExceeded";
+        errorMessage = this.getTranslatedError(
+          "rateLimitExceeded",
+          "Too many requests - please wait"
+        );
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      return {
+        success: false,
+        error: {
+          message: errorMessage,
+          key: errorKey,
+          originalError: error,
+        },
+      };
+    }
   }
 }
 
@@ -724,18 +629,6 @@ export const siteService = SiteService.getInstance();
 
 // Export types for use in other files
 export type {
-  Site,
-  SiteMember,
-  SiteManager,
-  SiteListItem,
-  SiteListResponse,
-  SiteOption,
-  User,
-  Worker,
-  PhoneNumberInput,
-  AddMembersRequest,
-  AddManagersRequest,
-  SiteServiceResponse,
-  SiteListParams,
-  ApiResponse,
+  AddManagersRequest, AddMembersRequest, ApiResponse, PhoneNumberInput, Site, SiteManager, SiteMember, SiteServiceResponse, User,
+  Worker
 };
