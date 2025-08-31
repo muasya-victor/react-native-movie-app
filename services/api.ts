@@ -7,8 +7,8 @@ const router = useRouter();
 
 // Create an axios instance
 const api = axios.create({
-  // baseURL: process.env.API_BASE_URL || "http://167.86.92.49:8000/api",
-  baseURL: "http://localhost:8000/api",
+  baseURL: process.env.API_BASE_URL || "http://167.86.92.49:8000/api",
+  // baseURL: "http://localhost:8000/api",
   timeout: Number(process.env.API_TIMEOUT) || 10000,
 });
 
